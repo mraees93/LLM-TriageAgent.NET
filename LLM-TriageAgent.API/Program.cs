@@ -27,25 +27,22 @@ else
 // ====================================================================
 builder.Services.AddMassTransit(x =>
 {
-    // This tells MassTransit to discover background consumers automatically
     x.SetKebabCaseEndpointNameFormatter();
 
-    // High-Utility Shortcut: Uses application memory as a lightning-fast queue.
-    // This saves us from managing complex remote RabbitMQ infrastructure in production!
+    x.AddConsumer<LLM_TriageAgent.API.Services.TicketConsumer>();
+
     x.UsingInMemory((context, cfg) =>
     {
         cfg.ConfigureEndpoints(context);
     });
 });
 
-// Add standard Web API controllers and endpoint tools
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline for development testing
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GitHubAgentSandbox")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+04dd625f026143cc1f4bee6875d710f212ff16c4")]
 [assembly: System.Reflection.AssemblyProductAttribute("GitHubAgentSandbox")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GitHubAgentSandbox")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

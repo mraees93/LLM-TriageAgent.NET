@@ -14,7 +14,6 @@ public class TicketConsumer : IConsumer<SupportTicket>
 {
     private readonly AppDbContext _dbContext;
 
-    // Inject our database context so the worker can update ticket statuses
     public TicketConsumer(AppDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -25,9 +24,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
         var queuedTicket = context.Message;
         Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
-        // ====================================================================
-        // 🛡️ UPDATED IDEMPOTENCY GUARD (RACE-CONDITION RESILIENT)
-        // ====================================================================
+        // UPDATED IDEMPOTENCY GUARD (RACE-CONDITION RESILIENT)
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
         
         if (dbTicket == null)
@@ -112,7 +109,6 @@ public class TicketConsumer : IConsumer<SupportTicket>
             dbTicket.Status = "Failed";
         }
 
-        // Save changes safely to your database file
         await _dbContext.SaveChangesAsync();
     }
 }

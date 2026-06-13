@@ -9,14 +9,13 @@ public class AppDbContext : DbContext
     {
     }
 
-    // This creates our "SupportTickets" table in the database
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Tell the database that Ticket ID must be unique
+        // Ticket ID must be unique
         modelBuilder.Entity<SupportTicket>()
             .HasKey(t => t.Id);
     }

@@ -1,0 +1,6 @@
+@LLM_TriageAgent.API_HostAddress = http://localhost:5088
+
+GET {{LLM_TriageAgent.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

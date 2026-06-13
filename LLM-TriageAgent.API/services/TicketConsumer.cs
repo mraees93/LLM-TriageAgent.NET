@@ -23,22 +23,41 @@ public class TicketConsumer : IConsumer<SupportTicket>
     public async Task Consume(ConsumeContext<SupportTicket> context)
     {
         var queuedTicket = context.Message;
-        Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue!");
+        Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
-        // 1. Fetch the ticket from the real database to update its status to Processing
+        // ====================================================================
+        // 🛡️ UPDATED IDEMPOTENCY GUARD (RACE-CONDITION RESILIENT)
+        // ====================================================================
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
-        if (dbTicket == null) return;
+        
+        if (dbTicket == null)
+        {
+            Console.WriteLine($"⚠️ [Idempotency Guard] Ticket #{queuedTicket.Id} was not found in the database. Skipping.");
+            return;
+        }
 
+        // CRITICAL CHECK: Stop if the ticket is already Resolved OR currently being processed!
+        if (dbTicket.Status == "Resolved" || dbTicket.Status == "Processing")
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"🛑 [Idempotency Guard] Duplicate message blocked! Ticket #{queuedTicket.Id} is already [{dbTicket.Status}]. Skipping processing.");
+            Console.ResetColor();
+            return;
+        }
+
+        // If it passes the check, we lock it instantly by setting it to Processing
         dbTicket.Status = "Processing";
         await _dbContext.SaveChangesAsync();
 
-        // 2. Setup standard .NET HttpClient to speak with your local Ollama server
+        // ====================================================================
+        // RUN THE AI AGENT CORE ENGINE LOGIC
+        // ====================================================================
         using var client = new HttpClient();
         var ollamaUrl = "http://localhost:11434/api/generate";
 
         try
         {
-            // 3. STEP 1 (AI Logic): Ask the local model to extract the error code
+            // STEP 1 (AI Logic): Ask the local model to extract the error code
             var payload = new
             {
                 model = "phi3",
@@ -54,19 +73,13 @@ public class TicketConsumer : IConsumer<SupportTicket>
             using var doc = JsonDocument.Parse(responseString);
             string errorCode = doc.RootElement.GetProperty("response").GetString()?.Trim() ?? "404";
 
-            // 4. STEP 2 (Tool Execution): Call our mock log tool logic
+            // STEP 2 (Tool Execution): Call our mock log tool logic
             Console.WriteLine($"🔍 [AI Agent Tool Use] Searching backend logs for code identifier: '{errorCode}'...");
-            string mockLogs = "";
-            if (errorCode.Contains("404"))
-            {
-                mockLogs = "DATABASE LOG: Thread 4: Error 404 on endpoint '/api/auth/login'. Reason: Route missing from RouteConfig.cs file mapping.";
-            }
-            else
-            {
-                mockLogs = "DATABASE LOG: General warning. No explicit route failure mappings located.";
-            }
+            string mockLogs = errorCode.Contains("404") 
+                ? "DATABASE LOG: Thread 4: Error 404 on endpoint '/api/auth/login'. Reason: Route missing from RouteConfig.cs file mapping."
+                : "DATABASE LOG: General warning. No explicit route failure mappings located.";
 
-            // 5. STEP 3 (Reasoning Loop): Pass logs back to the AI to draft a human solution reply
+            // STEP 3 (Reasoning Loop): Pass logs back to the AI to draft a human solution reply
             var triagePayload = new
             {
                 model = "phi3",
@@ -82,7 +95,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
             using var triageDoc = JsonDocument.Parse(triageResponseString);
             string aiFixMessage = triageDoc.RootElement.GetProperty("response").GetString()?.Trim() ?? "Configuration audit required.";
 
-            // 6. STEP 4 (Multi-step Action): Update database with the finalized resolution details
+            // STEP 4 (Multi-step Action): Update database with final details
             dbTicket.AssignedLabel = errorCode.Contains("404") ? "bug" : "investigate";
             dbTicket.AgentReply = aiFixMessage;
             dbTicket.Status = "Resolved";
@@ -94,12 +107,12 @@ public class TicketConsumer : IConsumer<SupportTicket>
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"❌ [Queue Consumer Error] Processing failed. Ensure Ollama is open! Details: {ex.Message}");
+            Console.WriteLine($"❌ [Queue Consumer Error] Processing failed. Details: {ex.Message}");
             Console.ResetColor();
             dbTicket.Status = "Failed";
         }
 
-        // Save all changes permanently to your SQLite database file
+        // Save changes safely to your database file
         await _dbContext.SaveChangesAsync();
     }
 }

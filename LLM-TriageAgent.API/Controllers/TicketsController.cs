@@ -53,6 +53,34 @@ public class TicketsController : ControllerBase
             
         return Ok(tickets);
     }
+
+        // TEMPORARY TEST ENDPOINT: Simulates a network duplicate retry
+    [HttpPost("test-idempotency")]
+    public async Task<IActionResult> TestIdempotency()
+    {
+        var duplicateTicket = new SupportTicket
+        {
+            Id = Guid.NewGuid(), // Both messages will share this exact same ID
+            Title = "Idempotency Test Trigger",
+            Description = "Testing 404 bug retries."
+        };
+
+        // 1. Save it once to the database
+        _context.SupportTickets.Add(duplicateTicket);
+        await _context.SaveChangesAsync();
+
+        Console.WriteLine($"\n🚀 [Test Trigger] Sending Message #1 for Ticket {duplicateTicket.Id}...");
+        await _publishEndpoint.Publish(duplicateTicket);
+
+        // Simulate a network glitch by waiting 2 seconds, then sending the exact same message again!
+        await Task.Delay(2000);
+
+        Console.WriteLine($"\n🚀 [Test Trigger] Sending Duplicate Message #2 for Ticket {duplicateTicket.Id}...");
+        await _publishEndpoint.Publish(duplicateTicket);
+
+        return Ok(new { Message = "Sent normal message and duplicate retry message into the queue." });
+    }
+
 }
 
 // A simple Data Transfer Object to format the incoming JSON data neatly

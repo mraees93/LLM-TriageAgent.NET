@@ -1,5 +1,5 @@
 # Stage 1: Build Environment
-FROM ://microsoft.com AS build-env
+FROM mcr.microsoft.com AS build-env
 WORKDIR /app
 
 # Copy the project file and restore dependencies

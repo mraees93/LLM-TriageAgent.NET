@@ -4,6 +4,7 @@ using MassTransit;
 using LLM_TriageAgent.API.Database;
 using LLM_TriageAgent.API.Models;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace LLM_TriageAgent.API.Controllers;

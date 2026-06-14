@@ -76,7 +76,7 @@ export default function TicketForm({ onTicketSubmitted }: TicketFormProps) {
             disabled={loading} // PROTECTS UX: Instantly locks the button against accidental double-clicks!
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? 'Queueing Ticket...' : 'Publish Ticket to Message Bus 🚀'}
+            {loading ? 'Queueing Ticket...' : 'Submit Ticket'}
           </button>
         </form>
       </div>

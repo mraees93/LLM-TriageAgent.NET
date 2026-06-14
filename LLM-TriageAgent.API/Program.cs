@@ -2,31 +2,47 @@ using Microsoft.EntityFrameworkCore;
 using MassTransit;
 using LLM_TriageAgent.API.Database; 
 using Microsoft.Extensions.DependencyInjection; 
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ====================================================================
-// 1. DATABASE CONFIGURATION (AUTOMATIC SWITCHING)
-// ====================================================================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(); 
 
-if (builder.Environment.IsDevelopment())
+// 1. PROXY PORT FORWARDING CONFIGURATION (Matches your working app!)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    // Local workspace uses lightweight SQLite file
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlite(connectionString ?? "Data Source=triage.db"));
-}
-else
-{
-    // FIXED: Reads your live cloud Aiven string from your Render variable environment settings!
-    var prodConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | 
+                               ForwardedHeaders.XForwardedProto | 
+                               ForwardedHeaders.XForwardedHost;
     
-    builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(prodConnectionString));
-}
+    options.KnownIPNetworks.Clear(); 
+    options.KnownProxies.Clear();
+});
+
+// 2. DUAL-SOURCE CONNECTION CHECK (Matches your working app!)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+                       ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+
+// 3. HARDENED DB CONFIGURATION WITH AUTOMATIC ENGINE SWITCHING
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    if (!string.IsNullOrEmpty(connectionString) && connectionString.Contains("Host="))
+    {
+        Console.WriteLine(">>>> SYSTEM CHECK: EXTERNAL POSTGRES DETECTED <<<<");
+        // Force version 16 to ensure compatibility with Aiven/Modern engines
+        options.UseNpgsql(connectionString, o => o.SetPostgresVersion(16, 0));
+    }
+    else
+    {
+        Console.WriteLine(">>>> SYSTEM CHECK: FALLING BACK TO SQLITE <<<<");
+        options.UseSqlite(connectionString ?? "Data Source=triage.db");
+    }
+});
 
 // ====================================================================
-// 2. MASSTRANSIT BACKGROUND QUEUE SETUP
+// MASSTRANSIT BACKGROUND QUEUE SETUP
 // ====================================================================
 builder.Services.AddMassTransit(x =>
 {
@@ -40,17 +56,13 @@ builder.Services.AddMassTransit(x =>
 });
 
 // ====================================================================
-// 3. CORS POLICY SETUP (GLOBAL OPEN GATEWAY PROTOTYPE)
+// CORS POLICY SETUP (GLOBAL OPEN GATEWAY PROTOTYPE)
 // ====================================================================
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); 
 
 var app = builder.Build();
 
@@ -61,13 +73,26 @@ if (app.Environment.IsDevelopment())
 }
 
 // ====================================================================
-// MIDDLEWARE STACK EXECUTION SEQUENCE
-// Configures open origin policy definitions right before processing routes!
+// MIDDLEWARE STACK EXECUTION SEQUENCE (Matches your working app!)
 // ====================================================================
+app.UseForwardedHeaders();
 app.UseCors();
-
-app.UseHttpsRedirection();
-app.UseAuthorization();
 app.MapControllers();
+
+// 4. SECURE AUTOMATIC MIGRATION LOGIC (Matches your working app!)
+using (var scope = app.Services.CreateScope())
+{
+    try 
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Console.WriteLine(">>>> SYSTEM CHECK: STARTING DATABASE MIGRATIONS <<<<");
+        db.Database.Migrate();
+        Console.WriteLine(">>>> SYSTEM CHECK: MIGRATIONS COMPLETE <<<<");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($">>>> SYSTEM CHECK: MIGRATION ERROR: {ex.Message} <<<<");
+    }
+}
 
 app.Run();

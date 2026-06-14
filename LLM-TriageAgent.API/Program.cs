@@ -33,6 +33,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         Console.WriteLine(">>>> SYSTEM CHECK: EXTERNAL POSTGRES DETECTED <<<<");
         // Force version 16 to ensure compatibility with Aiven/Modern engines
         options.UseNpgsql(connectionString, o => o.SetPostgresVersion(16, 0));
+        options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
     }
     else
     {

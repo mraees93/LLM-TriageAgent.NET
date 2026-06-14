@@ -12,13 +12,17 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 if (builder.Environment.IsDevelopment())
 {
+    // Local workspace uses lightweight SQLite file
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlite(connectionString ?? "Data Source=triage.db"));
 }
 else
 {
+    // FIXED: Reads your live cloud Aiven string from your Render variable environment settings!
+    var prodConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseNpgsql(connectionString));
+        options.UseNpgsql(prodConnectionString));
 }
 
 // ====================================================================
@@ -36,7 +40,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 // ====================================================================
-// 3. CORS POLICY SETUP
+// 3. CORS POLICY SETUP (GLOBAL OPEN GATEWAY PROTOTYPE)
 // ====================================================================
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
@@ -56,8 +60,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// CRITICAL ORDER FIX: UseCors MUST sit exactly here!
-// It must run before HttpsRedirection and MapControllers.
+// ====================================================================
+// MIDDLEWARE STACK EXECUTION SEQUENCE
+// Configures open origin policy definitions right before processing routes!
+// ====================================================================
 app.UseCors();
 
 app.UseHttpsRedirection();

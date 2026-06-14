@@ -43,5 +43,23 @@ export const ticketApi = {
       console.error('Error creating ticket:', error);
       return false;
     }
+  },
+
+  // ====================================================================
+  // 🔄 NEW ENCAPSULATED POLLING LAYER
+  // ====================================================================
+  // Automatically runs a timer block and hands data back to a callback function
+  subscribeToTickets: (callback: (tickets: SupportTicket[]) => void, intervalMs = 3000): () => void => {
+    // 1. Run an immediate initial fetch call on boot
+    ticketApi.getAll().then(callback);
+
+    // 2. Spin up the background network interval thread loop
+    const interval = setInterval(async () => {
+      const freshData = await ticketApi.getAll();
+      callback(freshData);
+    }, intervalMs);
+
+    // 3. Return a cleanup teardown method to clear memory when leaving pages
+    return () => clearInterval(interval);
   }
 };

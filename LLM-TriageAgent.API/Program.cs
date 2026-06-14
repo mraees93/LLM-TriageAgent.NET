@@ -58,7 +58,7 @@ if (app.Environment.IsDevelopment())
 
 // CRITICAL ORDER FIX: UseCors MUST sit exactly here!
 // It must run before HttpsRedirection and MapControllers.
-app.UseCors("AllowReactApp");
+app.UseCors();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

@@ -11,14 +11,16 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LLM_TriageAgent.API.Database.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260613123451_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260614204502_InitialProductionSchemaSetup")]
+    partial class InitialProductionSchemaSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
+            modelBuilder
+                .HasDefaultSchema("triage")
+                .HasAnnotation("ProductVersion", "10.0.9");
 
             modelBuilder.Entity("LLM_TriageAgent.API.Models.SupportTicket", b =>
                 {
@@ -49,7 +51,7 @@ namespace LLM_TriageAgent.API.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SupportTickets");
+                    b.ToTable("SupportTickets", "triage");
                 });
 #pragma warning restore 612, 618
         }

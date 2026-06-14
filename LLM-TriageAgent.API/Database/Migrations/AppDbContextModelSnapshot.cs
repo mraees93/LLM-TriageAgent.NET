@@ -15,7 +15,9 @@ namespace LLM_TriageAgent.API.Database.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
+            modelBuilder
+                .HasDefaultSchema("triage")
+                .HasAnnotation("ProductVersion", "10.0.9");
 
             modelBuilder.Entity("LLM_TriageAgent.API.Models.SupportTicket", b =>
                 {
@@ -46,7 +48,7 @@ namespace LLM_TriageAgent.API.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SupportTickets");
+                    b.ToTable("SupportTickets", "triage");
                 });
 #pragma warning restore 612, 618
         }

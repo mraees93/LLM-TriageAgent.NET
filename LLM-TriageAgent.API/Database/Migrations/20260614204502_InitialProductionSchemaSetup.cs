@@ -6,13 +6,17 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LLM_TriageAgent.API.Database.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialProductionSchemaSetup : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.EnsureSchema(
+                name: "triage");
+
             migrationBuilder.CreateTable(
                 name: "SupportTickets",
+                schema: "triage",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
@@ -33,7 +37,8 @@ namespace LLM_TriageAgent.API.Database.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "SupportTickets");
+                name: "SupportTickets",
+                schema: "triage");
         }
     }
 }

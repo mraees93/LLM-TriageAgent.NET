@@ -11,6 +11,10 @@ namespace LLM_TriageAgent.API.Database.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // 🛡️ RE-DEPLOYMENT SHIELD: Wipes out conflicting loose structures in the cloud first!
+            migrationBuilder.Sql("DROP TABLE IF EXISTS \"SupportTickets\";");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS triage.\"SupportTickets\";");
+
             migrationBuilder.EnsureSchema(
                 name: "triage");
 

@@ -11,7 +11,6 @@ export default function TicketForm({ onTicketSubmitted }: TicketFormProps) {
   const [description, setDescription] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Modal local state properties
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [modalContent, setModalContent] = useState({ title: '', message: '', type: 'info' as 'error' | 'success' | 'info' });
 
@@ -30,7 +29,6 @@ export default function TicketForm({ onTicketSubmitted }: TicketFormProps) {
     
     setLoading(true);
 
-    // Call our decoupled utility fetch logic
     const success = await ticketApi.create({ title, description });
     
     if (success) {
@@ -83,7 +81,6 @@ export default function TicketForm({ onTicketSubmitted }: TicketFormProps) {
         </form>
       </div>
 
-      {/* Inline Modal Injection */}
       <NotificationModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

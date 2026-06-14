@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MassTransit;
-using LLM_TriageAgent.API.Database;
+using LLM_TriageAgent.API.Database; 
+using Microsoft.Extensions.DependencyInjection; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,13 +12,11 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 if (builder.Environment.IsDevelopment())
 {
-    // Local development uses SQLite
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlite(connectionString ?? "Data Source=triage.db"));
 }
 else
 {
-    // Production on Render uses Aiven PostgreSQL
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
@@ -28,7 +27,6 @@ else
 builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
-
     x.AddConsumer<LLM_TriageAgent.API.Services.TicketConsumer>();
 
     x.UsingInMemory((context, cfg) =>
@@ -37,9 +35,22 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
+// ====================================================================
+// 3. CORS POLICY SETUP
+// ====================================================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // Your React Dev server port
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(); 
 
 var app = builder.Build();
 
@@ -48,6 +59,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// CRITICAL ORDER FIX: UseCors MUST sit exactly here!
+// It must run before HttpsRedirection and MapControllers.
+app.UseCors("AllowReactApp");
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

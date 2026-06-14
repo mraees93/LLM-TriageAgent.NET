@@ -19,7 +19,6 @@ export default function NotificationModal({ isOpen, onClose, title, message, typ
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
       <div className={`w-full max-w-md border rounded-xl p-6 shadow-2xl backdrop-blur-md ${typeStyles[type]} border-slate-700 bg-slate-800`}>
         
-        {/* Header Icon Indicator */}
         <div className="flex items-center gap-3 mb-3">
           <span className="text-xl">
             {type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️'}
@@ -27,12 +26,10 @@ export default function NotificationModal({ isOpen, onClose, title, message, typ
           <h3 className="text-lg font-bold text-slate-100">{title}</h3>
         </div>
 
-        {/* Content Body */}
         <p className="text-sm text-slate-300 mb-6 leading-relaxed">
           {message}
         </p>
 
-        {/* Footer Dismiss Button */}
         <div className="flex justify-end">
           <button
             onClick={onClose}

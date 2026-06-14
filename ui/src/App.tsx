@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ticketApi } from './utils/api';
-import type { SupportTicket } from './utils/api'; // Strict type-only import mapping
+import type { SupportTicket } from './utils/api'; 
 import TicketForm from './components/TicketForm';
 import OperationsMonitor from './components/OperationsMonitor';
 
@@ -9,13 +9,12 @@ export default function App() {
 
   // Real-time operations background polling system
   useEffect(() => {
-    // Connect directly to our encapsulated utility subscription stream.
-    // The state update function happens completely safe inside an async callback!
+    // Connect directly to encapsulated utility subscription stream.
     const unsubscribe = ticketApi.subscribeToTickets((freshData) => {
       setTickets(freshData);
     });
 
-    // Teardown listener instantly when component leaves memory view scope
+    // Teardown listener quickly when component leaves memory view scope
     return () => unsubscribe();
   }, []);
 
@@ -36,13 +35,10 @@ export default function App() {
           </div>
         </header>
 
-        {/* Core Multi-Column Operational Grid Workspace */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* Component Column 1: The Form Submission Engine */}
           <TicketForm onTicketSubmitted={() => ticketApi.getAll().then(setTickets)} />
 
-          {/* Component Columns 2 & 3: The Live Monitor Operational Deck */}
           <OperationsMonitor tickets={tickets} />
 
         </div>

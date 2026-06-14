@@ -8,7 +8,6 @@ export default function TicketCard({ ticket }: TicketCardProps) {
   return (
     <div className="bg-slate-800 border border-slate-700/80 rounded-xl p-5 shadow-sm transition-all hover:border-slate-600">
       
-      {/* Ticket Header & Status Badges */}
       <div className="flex justify-between items-start gap-4 mb-3">
         <div>
           <h3 className="font-bold text-lg text-slate-100">{ticket.title}</h3>
@@ -25,7 +24,6 @@ export default function TicketCard({ ticket }: TicketCardProps) {
         </span>
       </div>
 
-      {/* Raw Ticket User Description Input */}
       <p className="text-slate-300 text-sm bg-slate-900/40 rounded-lg p-3 border border-slate-900/50 mb-4">
         {ticket.description}
       </p>

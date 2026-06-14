@@ -1,5 +1,5 @@
 # Stage 1: Build Environment
-FROM mcr.microsoft.com AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 # Copy the project file and restore dependencies
@@ -12,8 +12,9 @@ RUN dotnet publish -c Release -o out
 # Stage 2: Final Production Runtime Image
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=build /app/out .
 
-ENV ASPNETCORE_HTTP_PORTS=80
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 
 ENTRYPOINT ["dotnet", "LLM-TriageAgent.API.dll"]

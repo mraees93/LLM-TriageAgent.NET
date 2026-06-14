@@ -9,9 +9,9 @@ namespace LLM_TriageAgent.API.Database.Migrations
     public partial class InitialProductionSchemaSetup : Migration
     {
         /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // 🛡️ RE-DEPLOYMENT SHIELD: Wipes out conflicting loose structures in the cloud first!
+            // Wipes out conflicting loose structures in the cloud first!
             migrationBuilder.Sql("DROP TABLE IF EXISTS \"SupportTickets\";");
             migrationBuilder.Sql("DROP TABLE IF EXISTS triage.\"SupportTickets\";");
 
@@ -23,14 +23,15 @@ namespace LLM_TriageAgent.API.Database.Migrations
                 schema: "triage",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false),
-                    AssignedLabel = table.Column<string>(type: "TEXT", nullable: true),
-                    AgentReply = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ResolvedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                    // ✅ FIXED: Removed type: "TEXT" to allow native PostgreSQL UUID and Timestamp mapping!
+                    Id = table.Column<Guid>(nullable: false),
+                    Title = table.Column<string>(nullable: false),
+                    Description = table.Column<string>(nullable: false),
+                    Status = table.Column<string>(nullable: false),
+                    AssignedLabel = table.Column<string>(nullable: true),
+                    AgentReply = table.Column<string>(nullable: true),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    ResolvedAt = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {

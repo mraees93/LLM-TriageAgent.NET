@@ -25,7 +25,8 @@ namespace LLM_TriageAgent.API.Database.Migrations
                     Status = table.Column<string>(type: "TEXT", nullable: false),
                     AssignedLabel = table.Column<string>(type: "TEXT", nullable: true),
                     AgentReply = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ResolvedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

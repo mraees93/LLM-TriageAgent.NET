@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LLM_TriageAgent.API.Database.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260614204502_InitialProductionSchemaSetup")]
+    [Migration("20260614220341_InitialProductionSchemaSetup")]
     partial class InitialProductionSchemaSetup
     {
         /// <inheritdoc />
@@ -39,6 +39,9 @@ namespace LLM_TriageAgent.API.Database.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")

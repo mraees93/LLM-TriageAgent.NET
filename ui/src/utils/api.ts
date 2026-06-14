@@ -15,7 +15,8 @@ export interface CreateTicketDto {
   description: string;
 }
 
-const BASE_URL = 'http://localhost:5088/api/tickets';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5088/api/tickets';
+
 
 export const ticketApi = {
   // GET: Fetch all tickets from the database context

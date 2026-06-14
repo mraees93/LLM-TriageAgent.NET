@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
 using LLM_TriageAgent.API.Database;
 using LLM_TriageAgent.API.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace LLM_TriageAgent.API.Controllers;
 
@@ -13,29 +15,37 @@ public class TicketsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
 
-    // inject db Context and MassTransit queue engine here
     public TicketsController(AppDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
         _publishEndpoint = publishEndpoint;
     }
 
+    // 1. GET: Fetch all records from our isolated schema
+    [HttpGet]
+    public async Task<IActionResult> GetAllTickets()
+    {
+        var tickets = await _context.SupportTickets
+            .OrderByDescending(t => t.CreatedAt)
+            .ToListAsync();
+            
+        return Ok(tickets);
+    }
+
+    // 2. POST: Publish a new ticket to the event bus
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
-        var targetGuid = dto.Id ?? Guid.NewGuid();
+        // Flexible string parsing safely prevents 500 mapping traps on PostgreSQL
+        Guid targetGuid = (!string.IsNullOrEmpty(dto.Id) && Guid.TryParse(dto.Id, out var parsedGuid)) 
+            ? parsedGuid 
+            : Guid.NewGuid();
 
-        // 🛡️ APPLICATION LEVEL IDEMPOTENCY CHECK
-        // Check if this ID already exists in our records BEFORE attempting a write
+        // Gateway Idempotency Guard
         var existingTicket = await _context.SupportTickets.AnyAsync(t => t.Id == targetGuid);
         if (existingTicket)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine($"⚠️ [API Gateway Guard] Blocked incoming duplicate HTTP POST request for Ticket #{targetGuid}. De-duplication successful.");
-            Console.ResetColor();
-
-            // Return a clean 200 OK or 409 Conflict instead of crashing the thread!
-            return Ok(new { TicketId = targetGuid, Message = "Ticket is already registered and undergoing processing." });
+            return Ok(new { TicketId = targetGuid, Message = "Ticket is already registered." });
         }
 
         var ticket = new SupportTicket
@@ -53,54 +63,35 @@ public class TicketsController : ControllerBase
 
             await _publishEndpoint.Publish(ticket);
 
-            return Accepted(new { TicketId = ticket.Id, Message = "Ticket received and queued for AI analysis." });
+            return Accepted(new { TicketId = ticket.Id, Message = "Ticket received and queued." });
         }
         catch (DbUpdateException)
         {
-            // Fallback safety net if two requests hit at the exact same millisecond
-            return Ok(new { TicketId = ticket.Id, Message = "Transaction clash detected. Item is already processing." });
+            return Ok(new { TicketId = ticket.Id, Message = "Transaction clash detected." });
         }
     }
 
-
-    [HttpGet]
-    public async Task<IActionResult> GetAllTickets()
+    // 3. DELETE: Clear a ticket off the dashboard metrics layout
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteTicket(Guid id)
     {
-        var tickets = await _context.SupportTickets
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
-
-        return Ok(tickets);
-    }
-
-    // TEMPORARY TEST ENDPOINT: Simulates a network duplicate retry
-    [HttpPost("test-idempotency")]
-    public async Task<IActionResult> TestIdempotency()
-    {
-        var duplicateTicket = new SupportTicket
+        var ticket = await _context.SupportTickets.FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null)
         {
-            Id = Guid.NewGuid(), // Both messages will share this exact same ID
-            Title = "Idempotency Test Trigger",
-            Description = "Testing 404 bug retries."
-        };
+            return NotFound(new { Message = "Target record not found in schema context." });
+        }
 
-        // 1. Save it once to the database
-        _context.SupportTickets.Add(duplicateTicket);
+        _context.SupportTickets.Remove(ticket);
         await _context.SaveChangesAsync();
 
-        Console.WriteLine($"\n🚀 [Test Trigger] Sending Message #1 for Ticket {duplicateTicket.Id}...");
-        await _publishEndpoint.Publish(duplicateTicket);
-
-        // Simulate a network glitch by waiting 2 seconds, then sending the exact same message again!
-        await Task.Delay(2000);
-
-        Console.WriteLine($"\n🚀 [Test Trigger] Sending Duplicate Message #2 for Ticket {duplicateTicket.Id}...");
-        await _publishEndpoint.Publish(duplicateTicket);
-
-        return Ok(new { Message = "Sent normal message and duplicate retry message into the queue." });
+        return Ok(new { Message = $"Ticket {id} successfully purged from database context." });
     }
-
 }
 
-// Data Transfer Object to format the incoming JSON data neatly
-public record CreateTicketDto(Guid? Id, string Title, string Description);
+// Robust, cloud-optimized DTO Landing Carrier
+public class CreateTicketDto
+{
+    public string? Id { get; set; } 
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}

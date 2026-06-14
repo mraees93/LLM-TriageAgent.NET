@@ -4,7 +4,6 @@ namespace LLM_TriageAgent.API.Models;
 
 public class SupportTicket
 {
-    // The unique ID for the ticket, crucial for Idempotency checks
     public Guid Id { get; set; } = Guid.NewGuid();
     
     public string Title { get; set; } = string.Empty;
@@ -12,9 +11,12 @@ public class SupportTicket
     
     public string Status { get; set; } = "Pending";
     
-    // Fields that our AI Agent will fill in autonomously later
     public string? AssignedLabel { get; set; }
     public string? AgentReply { get; set; }
     
+    // Telemetry Timestamps: Used to calculate queue resolution processing latency!
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    // ✅ ADDED BACK: This is the missing property the compiler is looking for!
+    public DateTime? ResolvedAt { get; set; } 
 }

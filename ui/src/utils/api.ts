@@ -15,7 +15,7 @@ export interface CreateTicketDto {
 
 // Keep your existing Vercel variable name! 
 // This reads the raw root url (https://onrender.com)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5088';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:5088';
 
 export const ticketApi = {
   // GET: Fetch all tickets (Appends the route path cleanly just like your working app!)

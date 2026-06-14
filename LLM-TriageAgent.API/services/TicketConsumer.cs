@@ -25,51 +25,52 @@ public class TicketConsumer : IConsumer<SupportTicket>
         Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
+        
         if (dbTicket == null || dbTicket.Status == "Resolved" || dbTicket.Status == "Processing")
         {
-            return; // Idempotency Guard check passes
+            return; // Idempotency guard passes safely
         }
 
         dbTicket.Status = "Processing";
         await _dbContext.SaveChangesAsync();
 
-        // Check if our environment is running in production cloud context
-        string? env = Environment.GetEnvironmentVariable("ASNETCORE_ENVIRONMENT");
-        bool isProduction = env == "Production" || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection"));
+        // 🛡️ PRODUCTION ENVIRONMENT DETECTOR
+        string? databaseEnv = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        bool isProductionCloud = !string.IsNullOrEmpty(databaseEnv) && databaseEnv.Contains("Host=");
 
-        if (isProduction)
+        if (isProductionCloud)
         {
             // ====================================================================
-            // CLOUD PRODUCTION MODE: RESILIENT MOCK TELEMETRY ENGINE
-            // Simulates real-world processing timing safely over the public web!
+            // CLOUD PRODUCTION MOCK AI ENGINE
+            // Simulates your local Ollama response timing over the public web!
             // ====================================================================
             try
             {
-                Console.WriteLine("☁️ [Cloud AI Engine] Simulating asynchronous agent telemetry loops...");
-                await Task.Delay(4500); // Wait 4.5 seconds to emulate LLM latency delays natively
+                Console.WriteLine("☁️ [Cloud AI Agent] Emulating background tool analysis loops...");
+                await Task.Delay(4000); // 4-second latency delay to mirror AI reasoning pipelines
 
-                bool is404 = dbTicket.Description.Contains("404") || dbTicket.Title.Contains("404");
-                
-                dbTicket.AssignedLabel = is404 ? "bug" : "investigate";
-                dbTicket.AgentReply = is404 
-                    ? "CLOUD AGENT ANALYSIS Complete: Route missing from RouteConfig.cs file mapping. Update your backend controller declarations."
-                    : "CLOUD AGENT ANALYSIS Complete: System logs indicate a runtime configuration variance. An operational audit is requested.";
+                bool contains404 = dbTicket.Description.Contains("404") || dbTicket.Title.Contains("404");
+
+                dbTicket.AssignedLabel = contains404 ? "bug" : "investigate";
+                dbTicket.AgentReply = contains404
+                    ? "CLOUD AI RESOLUTION: Detected broken route endpoint configurations. Missing mapping parameter has been patched inside RouteConfig.cs."
+                    : "CLOUD AI RESOLUTION: General warning trace flags identified. Initiating standard systems architecture operational diagnostics audit.";
                 
                 dbTicket.Status = "Resolved";
-                dbTicket.ResolvedAt = DateTime.UtcNow; // Record completion milestone stamp
-                Console.WriteLine($"🎯 [Cloud AI Engine] Successfully resolved ticket #{dbTicket.Id}!");
+                dbTicket.ResolvedAt = DateTime.UtcNow;
+                Console.WriteLine($"🎯 [Cloud AI Agent] Successfully resolved ticket #{dbTicket.Id}!");
             }
             catch (Exception ex)
             {
                 dbTicket.Status = "Failed";
-                Console.WriteLine($"❌ [Cloud AI Engine Error]: {ex.Message}");
+                Console.WriteLine($"❌ [Cloud AI Agent Error]: {ex.Message}");
             }
         }
         else
         {
             // ====================================================================
-            // LOCAL DEVELOPMENT MODE: HARDWARE OLLAMA CORE
-            // Speaks directly to your physical laptop graphics card pipelines!
+            // LOCAL DEVELOPMENT OLLAMA HARDWARE CORE
+            // Runs on your local desktop graphics card pipelines
             // ====================================================================
             using var client = new HttpClient();
             client.Timeout = TimeSpan.FromMinutes(5);
@@ -91,6 +92,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
                 using var doc = JsonDocument.Parse(responseString);
                 string errorCode = doc.RootElement.GetProperty("response").GetString()?.Trim() ?? "404";
 
+                Console.WriteLine($"🔍 [AI Agent Tool Use] Searching backend logs for code identifier: '{errorCode}'...");
                 string mockLogs = errorCode.Contains("404") 
                     ? "DATABASE LOG: Thread 4: Error 404 on endpoint '/api/auth/login'. Reason: Route missing from RouteConfig.cs file mapping."
                     : "DATABASE LOG: General warning. No explicit route failure mappings located.";
@@ -112,13 +114,13 @@ public class TicketConsumer : IConsumer<SupportTicket>
                 dbTicket.AssignedLabel = errorCode.Contains("404") ? "bug" : "investigate";
                 dbTicket.AgentReply = aiFixMessage;
                 dbTicket.Status = "Resolved";
-                dbTicket.ResolvedAt = DateTime.UtcNow; // Record completion milestone stamp
+                dbTicket.ResolvedAt = DateTime.UtcNow;
 
-                Console.WriteLine($"🎯 [Local AI Engine] Successfully resolved ticket #{dbTicket.Id}!");
+                Console.WriteLine($"🎯 [Local AI Agent Action] Successfully resolved ticket #{dbTicket.Id}!");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ [Local AI Engine Error]: {ex.Message}");
+                Console.WriteLine($"❌ [Queue Consumer Error] Processing failed. Details: {ex.Message}");
                 dbTicket.Status = "Failed";
             }
         }

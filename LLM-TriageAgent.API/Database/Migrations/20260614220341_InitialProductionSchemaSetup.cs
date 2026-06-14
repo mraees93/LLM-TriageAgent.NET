@@ -9,7 +9,7 @@ namespace LLM_TriageAgent.API.Database.Migrations
     public partial class InitialProductionSchemaSetup : Migration
     {
         /// <inheritdoc />
-                protected override void Up(MigrationBuilder migrationBuilder)
+                        protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Wipes out conflicting loose structures in the cloud first!
             migrationBuilder.Sql("DROP TABLE IF EXISTS \"SupportTickets\";");
@@ -23,15 +23,15 @@ namespace LLM_TriageAgent.API.Database.Migrations
                 schema: "triage",
                 columns: table => new
                 {
-                    // ✅ FIXED: Removed type: "TEXT" to allow native PostgreSQL UUID and Timestamp mapping!
-                    Id = table.Column<Guid>(nullable: false),
+                    // ✅ FIXED: Added explicit PostgreSQL cloud database column mapping types!
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(nullable: false),
                     Description = table.Column<string>(nullable: false),
                     Status = table.Column<string>(nullable: false),
                     AssignedLabel = table.Column<string>(nullable: true),
                     AgentReply = table.Column<string>(nullable: true),
-                    CreatedAt = table.Column<DateTime>(nullable: false),
-                    ResolvedAt = table.Column<DateTime>(nullable: true)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ResolvedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

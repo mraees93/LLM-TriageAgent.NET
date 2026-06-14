@@ -50,6 +50,10 @@ public class TicketConsumer : IConsumer<SupportTicket>
         // RUN THE AI AGENT CORE ENGINE LOGIC
         // ====================================================================
         using var client = new HttpClient();
+        
+        // FIXED: Extends the network limit to 5 minutes so local LLM hardware doesn't crash on timeouts
+        client.Timeout = TimeSpan.FromMinutes(5); 
+        
         var ollamaUrl = "http://localhost:11434/api/generate";
 
         try

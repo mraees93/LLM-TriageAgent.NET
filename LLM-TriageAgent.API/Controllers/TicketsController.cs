@@ -23,22 +23,45 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
+        var targetGuid = dto.Id ?? Guid.NewGuid();
+
+        // 🛡️ APPLICATION LEVEL IDEMPOTENCY CHECK
+        // Check if this ID already exists in our records BEFORE attempting a write
+        var existingTicket = await _context.SupportTickets.AnyAsync(t => t.Id == targetGuid);
+        if (existingTicket)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"⚠️ [API Gateway Guard] Blocked incoming duplicate HTTP POST request for Ticket #{targetGuid}. De-duplication successful.");
+            Console.ResetColor();
+
+            // Return a clean 200 OK or 409 Conflict instead of crashing the thread!
+            return Ok(new { TicketId = targetGuid, Message = "Ticket is already registered and undergoing processing." });
+        }
+
         var ticket = new SupportTicket
         {
+            Id = targetGuid,
             Title = dto.Title,
             Description = dto.Description,
             Status = "Pending"
         };
 
-        // 1. Save the incoming ticket into SQLite db
-        _context.SupportTickets.Add(ticket);
-        await _context.SaveChangesAsync();
+        try
+        {
+            _context.SupportTickets.Add(ticket);
+            await _context.SaveChangesAsync();
 
-        // 2. Multi-step Workflow Trigger: Drop the ticket onto the background queue, UI never has to wait.
-        await _publishEndpoint.Publish(ticket);
+            await _publishEndpoint.Publish(ticket);
 
-        return Accepted(new { TicketId = ticket.Id, Message = "Ticket received and queued for AI analysis." });
+            return Accepted(new { TicketId = ticket.Id, Message = "Ticket received and queued for AI analysis." });
+        }
+        catch (DbUpdateException)
+        {
+            // Fallback safety net if two requests hit at the exact same millisecond
+            return Ok(new { TicketId = ticket.Id, Message = "Transaction clash detected. Item is already processing." });
+        }
     }
+
 
     [HttpGet]
     public async Task<IActionResult> GetAllTickets()
@@ -46,11 +69,11 @@ public class TicketsController : ControllerBase
         var tickets = await _context.SupportTickets
             .OrderByDescending(t => t.CreatedAt)
             .ToListAsync();
-            
+
         return Ok(tickets);
     }
 
-        // TEMPORARY TEST ENDPOINT: Simulates a network duplicate retry
+    // TEMPORARY TEST ENDPOINT: Simulates a network duplicate retry
     [HttpPost("test-idempotency")]
     public async Task<IActionResult> TestIdempotency()
     {
@@ -80,4 +103,4 @@ public class TicketsController : ControllerBase
 }
 
 // Data Transfer Object to format the incoming JSON data neatly
-public record CreateTicketDto(string Title, string Description);
+public record CreateTicketDto(Guid? Id, string Title, string Description);

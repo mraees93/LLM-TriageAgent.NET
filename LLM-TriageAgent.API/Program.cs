@@ -38,16 +38,9 @@ builder.Services.AddMassTransit(x =>
 // ====================================================================
 // 3. CORS POLICY SETUP
 // ====================================================================
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactApp", policy =>
-    {
-        policy.WithOrigins(
-                "http://localhost:5173",                     // Local development testing
-                "https://llm-triage-dashboard.vercel.app"   // Your live Vercel dashboard address!
-              ) 
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(policy => {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 

@@ -42,7 +42,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Your React Dev server port
+        policy.WithOrigins(
+                "http://localhost:5173",                     // Local development testing
+                "https://llm-triage-dashboard.vercel.app"   // Your live Vercel dashboard address!
+              ) 
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

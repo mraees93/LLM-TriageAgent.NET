@@ -1,4 +1,3 @@
-// Strict TypeScript structure mapping to your C# SupportTicket Model
 export interface SupportTicket {
   id: string;
   title: string;
@@ -9,20 +8,20 @@ export interface SupportTicket {
   createdAt: string;
 }
 
-// Simple structure for data entering the form
 export interface CreateTicketDto {
   title: string;
   description: string;
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5088/api/tickets';
-
+// Keep your existing Vercel variable name! 
+// This reads the raw root url (https://onrender.com)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5088';
 
 export const ticketApi = {
-  // GET: Fetch all tickets from the database context
+  // GET: Fetch all tickets (Appends the route path cleanly just like your working app!)
   getAll: async (): Promise<SupportTicket[]> => {
     try {
-      const response = await fetch(BASE_URL);
+      const response = await fetch(`${API_BASE_URL}/api/tickets`);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();
     } catch (error) {
@@ -31,10 +30,10 @@ export const ticketApi = {
     }
   },
 
-  // POST: Publish a new ticket to the MassTransit message queue controller
+  // POST: Publish a new ticket
   create: async (dto: CreateTicketDto): Promise<boolean> => {
     try {
-      const response = await fetch(BASE_URL, {
+      const response = await fetch(`${API_BASE_URL}/api/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dto),
@@ -46,21 +45,15 @@ export const ticketApi = {
     }
   },
 
-  // ====================================================================
-  // 🔄 NEW ENCAPSULATED POLLING LAYER
-  // ====================================================================
-  // Automatically runs a timer block and hands data back to a callback function
+  // Encapsulated Polling Subscription Loop
   subscribeToTickets: (callback: (tickets: SupportTicket[]) => void, intervalMs = 3000): () => void => {
-    // 1. Run an immediate initial fetch call on boot
     ticketApi.getAll().then(callback);
 
-    // 2. Spin up the background network interval thread loop
     const interval = setInterval(async () => {
       const freshData = await ticketApi.getAll();
       callback(freshData);
     }, intervalMs);
 
-    // 3. Return a cleanup teardown method to clear memory when leaving pages
     return () => clearInterval(interval);
   }
 };

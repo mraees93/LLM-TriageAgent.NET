@@ -82,7 +82,7 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
           type="error"
           title="Confirm ticket deletion"
           message={`Are you sure you want to permanently delete "${selectedDeleteTicket.title}"? This action cannot be undone.`}
-          confirmText="Yes, Delete Record"
+          confirmText="Yes, Delete ticket"
           isActionLoading={isDeleting}
           onClose={() => setSelectedDeleteTicket(null)}
           onConfirm={handleConfirmedDelete}

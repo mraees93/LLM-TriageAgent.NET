@@ -6,6 +6,7 @@ export interface SupportTicket {
   assignedLabel: string | null;
   agentReply: string | null;
   createdAt: string;
+  resolvedAt: string | null;
 }
 
 export interface CreateTicketDto {

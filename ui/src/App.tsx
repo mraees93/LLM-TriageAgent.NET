@@ -39,7 +39,7 @@ export default function App() {
           
           <TicketForm onTicketSubmitted={() => ticketApi.getAll().then(setTickets)} />
 
-          <OperationsMonitor tickets={tickets} />
+          <OperationsMonitor tickets={tickets} onRefresh={() => ticketApi.getAll().then(setTickets)} />
 
         </div>
       </div>

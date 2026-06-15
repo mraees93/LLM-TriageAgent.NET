@@ -37,7 +37,7 @@ export default function EditTicketModal({ ticket, onClose, onUpdateSuccess }: Ed
         <div className="flex justify-between items-start mb-4 border-b border-slate-700 pb-3">
           <div>
             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-              📝 Edit Ticket Info
+              Edit Ticket
             </h3>
             {/* 🆔 ADDED TICKET ID TRACKER SUBTITLE */}
             <p className="text-xs font-mono text-slate-500 mt-1">

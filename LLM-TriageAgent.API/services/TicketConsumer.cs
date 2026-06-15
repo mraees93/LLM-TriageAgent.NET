@@ -24,12 +24,11 @@ public class TicketConsumer : IConsumer<SupportTicket>
         var queuedTicket = context.Message;
         Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
-        // Safely matches the record using the new clean string format layout!
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
         
         if (dbTicket == null || dbTicket.Status == "Resolved" || dbTicket.Status == "Processing")
         {
-            return; // Idempotency check passes safely
+            return; // Idempotency check passed safely
         }
 
         dbTicket.Status = "Processing";
@@ -41,15 +40,11 @@ public class TicketConsumer : IConsumer<SupportTicket>
 
         if (isProductionCloud)
         {
-            // ====================================================================
-            // CLOUD PRODUCTION MOCK AI ENGINE
-            // Simulates your local Ollama response timing safely over the public web!
-            // ====================================================================
+            // CLOUD PRODUCTION MOCK AI ENGINE, simulates local Ollama response timing safely over the public web
             try
             {
                 Console.WriteLine("☁️ [Cloud AI Agent] Emulating background tool analysis loops...");
                 
-                // 🎲 RANDOM LATENCY GENERATOR: Picks a random dynamic delay between 3.5 to 7.5 seconds
                 int dynamicDelayMs = new Random().Next(3500, 7500);
                 await Task.Delay(dynamicDelayMs); 
 
@@ -61,7 +56,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
                     : "CLOUD AI RESOLUTION: General warning trace flags identified. Initiating standard systems architecture operational diagnostics audit.";
                 
                 dbTicket.Status = "Resolved";
-                dbTicket.ResolvedAt = DateTime.UtcNow; // Record completion milestone stamp
+                dbTicket.ResolvedAt = DateTime.UtcNow; 
                 Console.WriteLine($"🎯 [Cloud AI Agent] Successfully resolved ticket #{dbTicket.Id}!");
             }
             catch (Exception ex)
@@ -72,10 +67,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
         }
         else
         {
-            // ====================================================================
             // LOCAL DEVELOPMENT OLLAMA HARDWARE CORE
-            // Runs on your local desktop graphics card pipelines
-            // ====================================================================
             using var client = new HttpClient();
             client.Timeout = TimeSpan.FromMinutes(5);
             var ollamaUrl = "http://localhost:11434/api/generate";

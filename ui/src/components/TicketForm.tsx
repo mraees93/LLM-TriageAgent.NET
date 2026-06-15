@@ -34,7 +34,7 @@ export default function TicketForm({ onTicketSubmitted }: TicketFormProps) {
     if (success) {
       setTitle('');
       setDescription('');
-      onTicketSubmitted(); // Trigger parent refresh loop
+      onTicketSubmitted(); 
       triggerModal("Transaction Authorized", "Ticket has been successfully broadcast to the MassTransit event stream.", "success");
     } else {
       triggerModal("Network Fault Detected", "Could not authorize data transaction with the backend server routing framework.", "error");
@@ -73,7 +73,7 @@ export default function TicketForm({ onTicketSubmitted }: TicketFormProps) {
           </div>
           <button
             type="submit"
-            disabled={loading} // PROTECTS UX: Instantly locks the button against accidental double-clicks!
+            disabled={loading}
             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg shadow-lg shadow-indigo-600/20 transition-all active:scale-[0.98] disabled:opacity-50"
           >
             {loading ? 'Queueing Ticket...' : 'Submit Ticket'}

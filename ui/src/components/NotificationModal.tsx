@@ -4,10 +4,9 @@ interface NotificationModalProps {
   title: string;
   message: string;
   type: 'error' | 'success' | 'info';
-  // ✅ ADDED OPTIONS FOR HIGH-UTILITY REUSABILITY:
-  onConfirm?: () => void;      // Triggers specific actions like database deletes
-  confirmText?: string;       // Custom text button label (e.g., "Yes, Purge Record")
-  isActionLoading?: boolean;  // Shows loading state text inside confirmation flows
+  onConfirm?: () => void;      
+  confirmText?: string;       
+  isActionLoading?: boolean;  
 }
 
 export default function NotificationModal({ 
@@ -45,11 +44,9 @@ export default function NotificationModal({
           {message}
         </p>
 
-        {/* ✅ INTERACTIVE LAYOUT ENGINE FLOW */}
         <div className="flex justify-end gap-3 text-sm font-medium">
           {isInteractiveConfirm ? (
             <>
-              {/* DUAL ACTION MODE: Renders interactive workflow confirmation buttons */}
               <button
                 disabled={isActionLoading}
                 onClick={onClose}
@@ -70,7 +67,6 @@ export default function NotificationModal({
               </button>
             </>
           ) : (
-            // STANDARD ALERT MODE: Renders your standard flat dismiss action layout
             <button
               onClick={onClose}
               className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors shadow-md ${
@@ -79,11 +75,10 @@ export default function NotificationModal({
                 'bg-indigo-600 hover:bg-indigo-500'
               }`}
             >
-              Dismiss Operational Log
+              Close
             </button>
           )}
         </div>
-
       </div>
     </div>
   );

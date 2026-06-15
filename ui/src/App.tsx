@@ -3,20 +3,18 @@ import { ticketApi } from './utils/api';
 import type { SupportTicket } from './utils/api'; 
 import TicketForm from './components/TicketForm';
 import OperationsMonitor from './components/OperationsMonitor';
-import NotificationModal from './components/NotificationModal'; // ✅ Reuses your custom modal
+import NotificationModal from './components/NotificationModal'; 
 
 export default function App() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   
-  // REAL-TIME SYSTEM FAULT MONITORING STATE CONTROLLERS
   const [activeFaultTicket, setActiveFaultTicket] = useState<SupportTicket | null>(null);
   
-  // A persistent memory tracking shield to ensure we only alert ONCE per unique failed ticket ID
+  // persistent memory tracking shield to ensure we only alert ONCE per unique failed ticket ID
   const alertedTicketIds = useRef<Set<string>>(new Set());
 
-  // Real-time operations background polling system
   useEffect(() => {
-    // 🛡️ FIRST LOAD SHIELD: Prevents old existing database errors from blocking new pop-ups
+    // FIRST LOAD SHIELD: Prevents old existing database errors from blocking new pop-ups
     let isFirstLoad = true;
 
     const unsubscribe = ticketApi.subscribeToTickets((freshData) => {
@@ -33,16 +31,14 @@ export default function App() {
         return;
       }
 
-      // 🔍 LIVE DETECTOR: Intercepts tickets that fail in real-time while watching the screen
+      // LIVE DETECTOR: Intercepts tickets that fail in real-time while watching the screen
       const urgentFault = freshData.find(
         (t) => t.status === 'Failed' && 
                !alertedTicketIds.current.has(t.id)
       );
 
       if (urgentFault) {
-        // Log the ID in our tracking shield so it doesn't pop up infinitely on the next poll check
         alertedTicketIds.current.add(urgentFault.id);
-        // TRIGGER CUSTOM MODAL OVERLAY POP-UP INSTANTLY
         setActiveFaultTicket(urgentFault);
       }
     });
@@ -54,13 +50,12 @@ export default function App() {
     <div className="min-h-screen bg-slate-900 text-slate-100 p-8 font-sans relative">
       <div className="max-w-6xl mx-auto">
         
-        {/* Universal Application Banner Deck */}
         <header className="mb-12 border-b border-slate-800 pb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-extrabold text-indigo-400 flex items-center gap-2">
               LLM-TriageAgent
             </h1>
-            <p className="text-slate-400 mt-1">Resilient event-driven support dashboard with background AI triage workers</p>
+            <p className="text-slate-400 mt-1">Resilient AI-driven Architecture</p>
           </div>
         </header>
 
@@ -73,7 +68,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* 🚨 REUSED MODAL OVERLAY PANEL: Triggers instantly on background queue exception loops */}
       {activeFaultTicket && (
         <NotificationModal
           isOpen={true}

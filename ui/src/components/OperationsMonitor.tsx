@@ -34,7 +34,6 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
   return (
     <div className="lg:col-span-2 space-y-4">
       
-      {/* ☕ CRITICAL: RED FREE-TIER COLD START MONITOR NOTICE */}
       {tickets.length === 0 && (
         <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs font-mono text-rose-400 space-y-1.5 animate-pulse mb-2">
           <div className="flex items-center gap-1.5 font-bold text-sm text-rose-300">

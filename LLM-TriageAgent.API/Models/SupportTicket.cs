@@ -17,7 +17,6 @@ public class SupportTicket
     public string? AssignedLabel { get; set; }
     public string? AgentReply { get; set; }
     
-    // Telemetry Timestamps: Explicitly handles both SQLite and PostgreSQL perfectly
     [Column(TypeName = "timestamp with time zone")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     

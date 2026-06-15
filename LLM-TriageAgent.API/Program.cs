@@ -11,7 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(); 
 
-// 1. PROXY PORT FORWARDING CONFIGURATION (Matches your working app!)
+// 1. PROXY PORT FORWARDING CONFIGURATION 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | 
@@ -22,7 +22,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// 2. DUAL-SOURCE CONNECTION CHECK (Matches your working app!)
+// 2. DUAL-SOURCE CONNECTION CHECK
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                        ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
 
@@ -43,9 +43,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
 });
 
-// ====================================================================
 // MASSTRANSIT BACKGROUND QUEUE SETUP
-// ====================================================================
 builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
@@ -58,9 +56,7 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-// ====================================================================
 // CORS POLICY SETUP (GLOBAL OPEN GATEWAY PROTOTYPE)
-// ====================================================================
 builder.Services.AddCors(options => {
     options.AddDefaultPolicy(policy => {
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().SetPreflightMaxAge(TimeSpan.FromMinutes(10));;
@@ -75,14 +71,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// ====================================================================
-// MIDDLEWARE STACK EXECUTION SEQUENCE (Matches your working app!)
-// ====================================================================
+// MIDDLEWARE STACK EXECUTION SEQUENCE
 app.UseForwardedHeaders();
 app.UseCors();
 app.MapControllers();
 
-// 4. SECURE AUTOMATIC MIGRATION LOGIC (Matches your working app!)
+// 4. SECURE AUTOMATIC MIGRATION LOGIC
 using (var scope = app.Services.CreateScope())
 {
     try 

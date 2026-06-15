@@ -22,7 +22,6 @@ public class TicketsController : ControllerBase
         _publishEndpoint = publishEndpoint;
     }
 
-    // 1. GET: Fetch all records from our new table layout
     [HttpGet]
     public async Task<IActionResult> GetAllTickets()
     {
@@ -33,13 +32,12 @@ public class TicketsController : ControllerBase
         return Ok(tickets);
     }
 
-    // 2. POST: Publish a new ticket to the event bus (Matches your plain string post layout style!)
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
         var ticket = new SupportTicket
         {
-            Id = Guid.NewGuid().ToString(), // Assigns a secure string identifier key
+            Id = Guid.NewGuid().ToString(), 
             Title = dto.Title,
             Description = dto.Description,
             Status = "Pending"
@@ -53,7 +51,6 @@ public class TicketsController : ControllerBase
         return Ok(ticket);
     }
 
-    // 3. DELETE: Clear a ticket off the dashboard layout (DELETE api/tickets/{id})
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTicket(string id)
     {
@@ -78,11 +75,9 @@ public class TicketsController : ControllerBase
             return NotFound(new { message = "Target record not found or already deleted." });
         }
 
-        // Overwrite text inputs while preserving the exact same database ID!
         ticket.Title = dto.Title;
         ticket.Description = dto.Description;
         
-        // Reset status properties so the AI agent re-evaluates the fresh text data!
         ticket.Status = "Pending";
         ticket.AssignedLabel = null;
         ticket.AgentReply = null;
@@ -91,7 +86,7 @@ public class TicketsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        // 🚀 Push back onto MassTransit event bus to awake the background worker!
+        // Push back onto MassTransit event bus to awake the background worker
         await _publishEndpoint.Publish(ticket);
 
         return Ok(ticket);

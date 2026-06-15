@@ -21,7 +21,7 @@ public class ConsumerTests
         return new AppDbContext(options);
     }
 
-    // 🟢 TEST 1: EXISTING FAULT CONSUMER TEST
+    // TEST 1: EXISTING FAULT CONSUMER TEST
     [Fact]
     public async Task TicketFaultConsumer_Should_Quarantine_And_Fail_Ticket_When_Triggered()
     {
@@ -54,7 +54,7 @@ public class ConsumerTests
         Assert.Equal("SYSTEM_FAULT", updatedTicket.AssignedLabel);
     }
 
-    // 🟢 TEST 2: AI RE-TRIAGE "BUG" CLASSIFICATION RULE
+    // TEST 2: AI RE-TRIAGE "BUG" CLASSIFICATION RULE
     [Fact]
     public async Task TicketConsumer_Should_Assign_Bug_Label_When_Description_Contains_404()
     {
@@ -91,7 +91,7 @@ public class ConsumerTests
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
     }
 
-    // 🟢 TEST 3: AI RE-TRIAGE "INVESTIGATE" CLASSIFICATION RULE
+    // TEST 3: AI RE-TRIAGE "INVESTIGATE" CLASSIFICATION RULE
     [Fact]
     public async Task TicketConsumer_Should_Assign_Investigate_Label_For_Generic_Errors()
     {
@@ -126,7 +126,7 @@ public class ConsumerTests
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
     }
 
-    // 🟢 TEST 4: IDEMPOTENCY SAFETY SHIELD GUARD
+    // TEST 4: IDEMPOTENCY SAFETY SHIELD GUARD
     [Fact]
     public async Task TicketConsumer_Should_Skip_Processing_If_Ticket_Is_Already_Resolved()
     {

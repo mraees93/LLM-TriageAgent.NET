@@ -3,6 +3,7 @@ using MassTransit;
 using LLM_TriageAgent.API.Database; 
 using Microsoft.Extensions.DependencyInjection; 
 using Microsoft.AspNetCore.HttpOverrides;
+using LLM_TriageAgent.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,7 @@ builder.Services.AddMassTransit(x =>
 {
     x.SetKebabCaseEndpointNameFormatter();
     x.AddConsumer<LLM_TriageAgent.API.Services.TicketConsumer>();
+    x.AddConsumer<TicketFaultConsumer>();
 
     x.UsingInMemory((context, cfg) =>
     {

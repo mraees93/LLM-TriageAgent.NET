@@ -58,12 +58,9 @@ export default function App() {
         <header className="mb-12 border-b border-slate-800 pb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-extrabold text-indigo-400 flex items-center gap-2">
-              🤖 LLM-TriageAgent.NET
+              LLM-TriageAgent
             </h1>
-            <p className="text-slate-400 mt-1">Autonomous Event-Driven AI DevOps Support System</p>
-          </div>
-          <div className="bg-indigo-950/50 text-indigo-400 border border-indigo-800 text-xs px-3 py-1.5 rounded-full font-mono">
-            Architecture: Decoupled API-First MVC
+            <p className="text-slate-400 mt-1">Resilient event-driven support dashboard with background AI triage workers</p>
           </div>
         </header>
 

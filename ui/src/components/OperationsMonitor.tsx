@@ -2,19 +2,21 @@ import { useState } from 'react';
 import { ticketApi, type SupportTicket } from '../utils/api';
 import TicketCard from './TicketCard';
 import NotificationModal from './NotificationModal';
+import EditTicketModal from './EditTicketModal'; // ✅ Imported the edit popup form
 
 interface OperationsMonitorProps {
   tickets: SupportTicket[];
-  onRefresh: () => void; // ✅ Added prop to update full-stack view list arrays
+  onRefresh: () => void; 
 }
 
 export default function OperationsMonitor({ tickets, onRefresh }: OperationsMonitorProps) {
-  // 🎛️ MULTI-PURPOSE MODAL MANAGEMENT STATE CONTROLLERS
+  // Modal state management controllers
   const [selectedDeleteTicket, setSelectedDeleteTicket] = useState<SupportTicket | null>(null);
+  const [selectedEditTicket, setSelectedEditTicket] = useState<SupportTicket | null>(null); // ✅ Edit state
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // 🪓 EXECUTE API PURGE LOOP
+  // Execute database record deletion
   const handleConfirmedDelete = async () => {
     if (!selectedDeleteTicket) return;
 
@@ -22,8 +24,8 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
     setErrorMessage(null);
     try {
       await ticketApi.deleteTicketById(selectedDeleteTicket.id);
-      onRefresh(); // Refresh global support ticket grid streams
-      setSelectedDeleteTicket(null); // Clear selected item to close dialog cleanly
+      onRefresh(); 
+      setSelectedDeleteTicket(null); 
     } catch (error) {
       console.error('Failed to clear entry from database:', error);
       setErrorMessage('Network Fault: Could not complete delete transaction loops.');
@@ -40,28 +42,36 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
       </h2>
 
       {tickets.length === 0 ? (
-        // Empty State Banner
         <div className="bg-slate-800/30 border border-dashed border-slate-700 rounded-xl p-12 text-center text-slate-500">
           No tickets processed yet. Submit an issue on the left to wake up the AI agent queue loop!
         </div>
       ) : (
-        // Rendered Dynamic Map Stream Array
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
           {tickets.map((ticket) => (
             <TicketCard 
               key={ticket.id} 
               ticket={ticket} 
-              onDeleteRequest={(targetTicket) => setSelectedDeleteTicket(targetTicket)} // ✅ Open Modal
+              onDeleteRequest={(targetTicket) => setSelectedDeleteTicket(targetTicket)} 
+              onEditRequest={(targetTicket) => setSelectedEditTicket(targetTicket)} // ✅ Hook up Edit
             />
           ))}
         </div>
       )}
 
-      {/* 🛡️ REUSED ACTION CONFIRMATION OVERLAY MODAL */}
+      {/* ✅ NEW POP-UP EDIT FORM WINDOW ELEMENT */}
+      {selectedEditTicket && (
+        <EditTicketModal
+          ticket={selectedEditTicket}
+          onClose={() => setSelectedEditTicket(null)}
+          onUpdateSuccess={onRefresh}
+        />
+      )}
+
+      {/* REUSED ACTION CONFIRMATION OVERLAY MODAL */}
       {selectedDeleteTicket && !errorMessage && (
         <NotificationModal
           isOpen={true}
-          type="error" // Uses red theme color parameters for confirmation items
+          type="error"
           title="Confirm ticket deletion"
           message={`Are you sure you want to permanently delete "${selectedDeleteTicket.title}"? This action cannot be undone.`}
           confirmText="Yes, Delete Record"
@@ -71,7 +81,7 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
         />
       )}
 
-      {/* ⚠️ REUSED TRANSACTION ERROR OVERLAY MODAL */}
+      {/* REUSED TRANSACTION ERROR OVERLAY MODAL */}
       {errorMessage && (
         <NotificationModal
           isOpen={true}

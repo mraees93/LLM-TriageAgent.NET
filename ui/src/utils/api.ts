@@ -57,6 +57,21 @@ export const ticketApi = {
     console.log('Ticket record deleted successfully.');
   },
 
+    // PUT: Update an existing ticket text payload matching its original ID
+  update: async (id: string, dto: CreateTicketDto): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tickets/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto),
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error updating ticket record context:', error);
+      return false;
+    }
+  },
+
   // Encapsulated Polling Subscription Loop
   subscribeToTickets: (callback: (tickets: SupportTicket[]) => void, intervalMs = 3000): () => void => {
     ticketApi.getAll().then(callback);

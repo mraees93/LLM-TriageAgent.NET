@@ -68,9 +68,43 @@ public class TicketsController : ControllerBase
         
         return Ok();
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateTicket(string id, [FromBody] UpdateTicketDto dto)
+    {
+        var ticket = await _context.SupportTickets.FirstOrDefaultAsync(t => t.Id == id);
+        if (ticket == null)
+        {
+            return NotFound(new { message = "Target record not found or already deleted." });
+        }
+
+        // Overwrite text inputs while preserving the exact same database ID!
+        ticket.Title = dto.Title;
+        ticket.Description = dto.Description;
+        
+        // Reset status properties so the AI agent re-evaluates the fresh text data!
+        ticket.Status = "Pending";
+        ticket.AssignedLabel = null;
+        ticket.AgentReply = null;
+        ticket.CreatedAt = DateTime.UtcNow; 
+        ticket.ResolvedAt = null;
+
+        await _context.SaveChangesAsync();
+
+        // 🚀 Push back onto MassTransit event bus to awake the background worker!
+        await _publishEndpoint.Publish(ticket);
+
+        return Ok(ticket);
+    }
 }
 
 public class CreateTicketDto
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+public class UpdateTicketDto
 {
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

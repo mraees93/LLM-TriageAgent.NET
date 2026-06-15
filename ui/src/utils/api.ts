@@ -13,15 +13,14 @@ export interface CreateTicketDto {
   description: string;
 }
 
-// Keep your existing Vercel variable name! 
-// This reads the raw root url (https://onrender.com)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:5088';
+// ✅ FIXED: Matches your working URL shortener naming layout exactly!
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5088/api/tickets';
 
 export const ticketApi = {
-  // GET: Fetch all tickets (Appends the route path cleanly just like your working app!)
+  // GET: Fetch all tickets
   getAll: async (): Promise<SupportTicket[]> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tickets`);
+      const response = await fetch(`${API_BASE_URL}`);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();
     } catch (error) {
@@ -33,7 +32,7 @@ export const ticketApi = {
   // POST: Publish a new ticket
   create: async (dto: CreateTicketDto): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tickets`, {
+      const response = await fetch(`${API_BASE_URL}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dto),
@@ -43,6 +42,18 @@ export const ticketApi = {
       console.error('Error creating ticket:', error);
       return false;
     }
+  },
+
+  // ✅ ADDED: Delete a ticket off the user interface grid (Matches deleteUrlByID!)
+  deleteTicketById: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete item: ${response.statusText}`);
+    }
+    console.log('Ticket record deleted successfully from cloud table context.');
   },
 
   // Encapsulated Polling Subscription Loop

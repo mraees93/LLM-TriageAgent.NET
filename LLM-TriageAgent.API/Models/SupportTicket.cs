@@ -1,10 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LLM_TriageAgent.API.Models;
 
 public class SupportTicket
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    [Key]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
     
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
@@ -14,9 +17,10 @@ public class SupportTicket
     public string? AssignedLabel { get; set; }
     public string? AgentReply { get; set; }
     
-    // Telemetry Timestamps: Used to calculate queue resolution processing latency!
+    // Telemetry Timestamps: Explicitly handles both SQLite and PostgreSQL perfectly
+    [Column(TypeName = "timestamp with time zone")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    // ✅ ADDED BACK: This is the missing property the compiler is looking for!
+    [Column(TypeName = "timestamp with time zone")]
     public DateTime? ResolvedAt { get; set; } 
 }

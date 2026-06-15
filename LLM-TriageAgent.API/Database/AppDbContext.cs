@@ -15,13 +15,10 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // 🛡️ MULTI-PROJECT ISOLATION SHIELD
-        // This forces this project to only talk to a separate schema named "triage"
-        // Other portfolio project tables are never touched or overwritten!
-        modelBuilder.HasDefaultSchema("triage");
-
-        // Ticket ID must be unique
-        modelBuilder.Entity<SupportTicket>()
-            .HasKey(t => t.Id);
+        // to avoid database folder prefix errors on Render
+        modelBuilder.Entity<SupportTicket>(entity =>
+        {
+            entity.ToTable("SupportTickets_Final_v6");
+        });
     }
 }

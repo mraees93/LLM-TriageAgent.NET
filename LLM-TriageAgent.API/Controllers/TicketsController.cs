@@ -22,7 +22,7 @@ public class TicketsController : ControllerBase
         _publishEndpoint = publishEndpoint;
     }
 
-    // 1. GET: Fetch all records from our isolated schema
+    // 1. GET: Fetch all records from our new table layout
     [HttpGet]
     public async Task<IActionResult> GetAllTickets()
     {
@@ -33,66 +33,45 @@ public class TicketsController : ControllerBase
         return Ok(tickets);
     }
 
-    // 2. POST: Publish a new ticket to the event bus
+    // 2. POST: Publish a new ticket to the event bus (Matches your plain string post layout style!)
     [HttpPost]
     public async Task<IActionResult> CreateTicket([FromBody] CreateTicketDto dto)
     {
-        // Flexible string parsing safely prevents 500 mapping traps on PostgreSQL
-        Guid targetGuid = (!string.IsNullOrEmpty(dto.Id) && Guid.TryParse(dto.Id, out var parsedGuid)) 
-            ? parsedGuid 
-            : Guid.NewGuid();
-
-        // Gateway Idempotency Guard
-        var existingTicket = await _context.SupportTickets.AnyAsync(t => t.Id == targetGuid);
-        if (existingTicket)
-        {
-            return Ok(new { TicketId = targetGuid, Message = "Ticket is already registered." });
-        }
-
         var ticket = new SupportTicket
         {
-            Id = targetGuid,
+            Id = Guid.NewGuid().ToString(), // Assigns a secure string identifier key
             Title = dto.Title,
             Description = dto.Description,
             Status = "Pending"
         };
 
-        try
-        {
-            _context.SupportTickets.Add(ticket);
-            await _context.SaveChangesAsync();
+        _context.SupportTickets.Add(ticket);
+        await _context.SaveChangesAsync();
 
-            await _publishEndpoint.Publish(ticket);
+        await _publishEndpoint.Publish(ticket);
 
-            return Accepted(new { TicketId = ticket.Id, Message = "Ticket received and queued." });
-        }
-        catch (DbUpdateException)
-        {
-            return Ok(new { TicketId = ticket.Id, Message = "Transaction clash detected." });
-        }
+        return Ok(ticket);
     }
 
-    // 3. DELETE: Clear a ticket off the dashboard metrics layout
+    // 3. DELETE: Clear a ticket off the dashboard layout (DELETE api/tickets/{id})
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTicket(Guid id)
+    public async Task<IActionResult> DeleteTicket(string id)
     {
         var ticket = await _context.SupportTickets.FirstOrDefaultAsync(t => t.Id == id);
         if (ticket == null)
         {
-            return NotFound(new { Message = "Target record not found in schema context." });
+            return NotFound(new { message = "Link not found or already deleted" });
         }
 
         _context.SupportTickets.Remove(ticket);
         await _context.SaveChangesAsync();
-
-        return Ok(new { Message = $"Ticket {id} successfully purged from database context." });
+        
+        return Ok();
     }
 }
 
-// Robust, cloud-optimized DTO Landing Carrier
 public class CreateTicketDto
 {
-    public string? Id { get; set; } 
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 }

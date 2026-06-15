@@ -24,17 +24,18 @@ public class TicketConsumer : IConsumer<SupportTicket>
         var queuedTicket = context.Message;
         Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
+        // ✅ FIXED: Safely matches the record using the new clean string format layout!
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
         
         if (dbTicket == null || dbTicket.Status == "Resolved" || dbTicket.Status == "Processing")
         {
-            return; // Idempotency guard passes safely
+            return; // Idempotency check passes safely
         }
 
         dbTicket.Status = "Processing";
         await _dbContext.SaveChangesAsync();
 
-        // 🛡️ PRODUCTION ENVIRONMENT DETECTOR
+        // Check if our environment is running in production cloud context
         string? databaseEnv = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
         bool isProductionCloud = !string.IsNullOrEmpty(databaseEnv) && databaseEnv.Contains("Host=");
 
@@ -42,7 +43,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
         {
             // ====================================================================
             // CLOUD PRODUCTION MOCK AI ENGINE
-            // Simulates your local Ollama response timing over the public web!
+            // Simulates your local Ollama response timing safely over the public web!
             // ====================================================================
             try
             {
@@ -57,7 +58,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
                     : "CLOUD AI RESOLUTION: General warning trace flags identified. Initiating standard systems architecture operational diagnostics audit.";
                 
                 dbTicket.Status = "Resolved";
-                dbTicket.ResolvedAt = DateTime.UtcNow;
+                dbTicket.ResolvedAt = DateTime.UtcNow; // Record completion milestone stamp
                 Console.WriteLine($"🎯 [Cloud AI Agent] Successfully resolved ticket #{dbTicket.Id}!");
             }
             catch (Exception ex)

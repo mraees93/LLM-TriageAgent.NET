@@ -24,7 +24,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
         var queuedTicket = context.Message;
         Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
-        // ✅ FIXED: Safely matches the record using the new clean string format layout!
+        // Safely matches the record using the new clean string format layout!
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
         
         if (dbTicket == null || dbTicket.Status == "Resolved" || dbTicket.Status == "Processing")
@@ -48,7 +48,10 @@ public class TicketConsumer : IConsumer<SupportTicket>
             try
             {
                 Console.WriteLine("☁️ [Cloud AI Agent] Emulating background tool analysis loops...");
-                await Task.Delay(4000); // 4-second latency delay to mirror AI reasoning pipelines
+                
+                // 🎲 RANDOM LATENCY GENERATOR: Picks a random dynamic delay between 3.5 to 7.5 seconds
+                int dynamicDelayMs = new Random().Next(3500, 7500);
+                await Task.Delay(dynamicDelayMs); 
 
                 bool contains404 = dbTicket.Description.Contains("404") || dbTicket.Title.Contains("404");
 

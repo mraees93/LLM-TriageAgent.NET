@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ticketApi, type SupportTicket } from '../utils/api';
 import TicketCard from './TicketCard';
 import NotificationModal from './NotificationModal';
-import EditTicketModal from './EditTicketModal'; // ✅ Imported the edit popup form
+import EditTicketModal from './EditTicketModal';
 
 interface OperationsMonitorProps {
   tickets: SupportTicket[];
@@ -10,16 +10,13 @@ interface OperationsMonitorProps {
 }
 
 export default function OperationsMonitor({ tickets, onRefresh }: OperationsMonitorProps) {
-  // Modal state management controllers
   const [selectedDeleteTicket, setSelectedDeleteTicket] = useState<SupportTicket | null>(null);
-  const [selectedEditTicket, setSelectedEditTicket] = useState<SupportTicket | null>(null); // ✅ Edit state
+  const [selectedEditTicket, setSelectedEditTicket] = useState<SupportTicket | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Execute database record deletion
   const handleConfirmedDelete = async () => {
     if (!selectedDeleteTicket) return;
-
     setIsDeleting(true);
     setErrorMessage(null);
     try {
@@ -27,7 +24,7 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
       onRefresh(); 
       setSelectedDeleteTicket(null); 
     } catch (error) {
-      console.error('Failed to clear entry from database:', error);
+      console.error(error);
       setErrorMessage('Network Fault: Could not complete delete transaction loops.');
     } finally {
       setIsDeleting(false);
@@ -36,6 +33,20 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
 
   return (
     <div className="lg:col-span-2 space-y-4">
+      
+      {/* ☕ CRITICAL: RED FREE-TIER COLD START MONITOR NOTICE */}
+      {tickets.length === 0 && (
+        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs font-mono text-rose-400 space-y-1.5 animate-pulse mb-2">
+          <div className="flex items-center gap-1.5 font-bold text-sm text-rose-300">
+            <span>🛑</span>
+            <span>Cloud Network Cold-Start Warning</span>
+          </div>
+          <p className="text-slate-400 leading-normal text-xs">
+            Render and Aiven free tiers automatically sleep after inactivity. If the dashboard below is blank on your first load, the cloud server container is currently spinning up. This boot sequence can take up to <span className="text-rose-400 font-bold">50 seconds</span>. Thank you for your patience!
+          </p>
+        </div>
+      )}
+
       <h2 className="text-xl font-bold text-slate-200 flex items-center gap-2">
         Live Agent Operations Monitor
         <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
@@ -51,14 +62,13 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
             <TicketCard 
               key={ticket.id} 
               ticket={ticket} 
-              onDeleteRequest={(targetTicket) => setSelectedDeleteTicket(targetTicket)} 
-              onEditRequest={(targetTicket) => setSelectedEditTicket(targetTicket)} // ✅ Hook up Edit
+              onDeleteRequest={(t) => setSelectedDeleteTicket(t)} 
+              onEditRequest={(t) => setSelectedEditTicket(t)}
             />
           ))}
         </div>
       )}
 
-      {/* ✅ NEW POP-UP EDIT FORM WINDOW ELEMENT */}
       {selectedEditTicket && (
         <EditTicketModal
           ticket={selectedEditTicket}
@@ -67,7 +77,6 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
         />
       )}
 
-      {/* REUSED ACTION CONFIRMATION OVERLAY MODAL */}
       {selectedDeleteTicket && !errorMessage && (
         <NotificationModal
           isOpen={true}
@@ -81,7 +90,6 @@ export default function OperationsMonitor({ tickets, onRefresh }: OperationsMoni
         />
       )}
 
-      {/* REUSED TRANSACTION ERROR OVERLAY MODAL */}
       {errorMessage && (
         <NotificationModal
           isOpen={true}

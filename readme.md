@@ -50,7 +50,8 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
 LLM-TriageAgent includes a separate, root-level test project built with **xUnit** and **Moq** to validate core background consumer logic, state machine patterns, and idempotency guards using an isolated, thread-safe In-Memory database tracker layer.
 
 ### Core Coverage Matrices
-* **Idempotency Checks**: Verifies that workers drop redundant processing messages to preserve database integrity.
+* **Idempotency Checks**: Verifies that backend consumer workers immediately intercept and drop redundant messages—safeguarding data channels if the React client sends a duplicate network packet by accident or if an internet protocol loops a transaction—preventing duplicate processing loops to preserve absolute database state integrity.
+
 * **AI Rule Classification**: Validates pattern matching logic against high-risk error indicators (e.g., forcing a `bug` label string when descriptions contain a `"404"` error flag).
 * **Fault Consumer Resilience**: Assures the Dead Letter Queue worker properly isolates exception envelopes and saves quarantine logs during system crashes.
 

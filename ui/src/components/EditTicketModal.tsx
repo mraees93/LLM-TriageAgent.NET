@@ -34,10 +34,16 @@ export default function EditTicketModal({ ticket, onClose, onUpdateSuccess }: Ed
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
       <div className="w-full max-w-lg border border-slate-700 bg-slate-800 rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
         
-        <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-          <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-            📝 Edit Ticket Info
-          </h3>
+        <div className="flex justify-between items-start mb-4 border-b border-slate-700 pb-3">
+          <div>
+            <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+              📝 Edit Ticket Info
+            </h3>
+            {/* 🆔 ADDED TICKET ID TRACKER SUBTITLE */}
+            <p className="text-xs font-mono text-slate-500 mt-1">
+              Ticket ID: <span className="text-slate-400">{ticket.id}</span>
+            </p>
+          </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-200 font-mono text-sm">
             ✕ Close
           </button>

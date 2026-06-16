@@ -22,17 +22,18 @@ jobs:
       with:
         dotnet-version: '10.0.x'
 
-    # 3. Pull down all required NuGet packages from the correct subfolder directory
+    # 3. Pull down required NuGet packages explicitly for your API and Tests folders
     - name: 📥 Restore Core NuGet Dependencies
-      working-directory: ./LLM-TriageAgent.API
-      run: dotnet restore
+      run: |
+        dotnet restore LLM-TriageAgent.API/LLM-TriageAgent.API.csproj
+        dotnet restore LLM-TriageAgent.Tests/LLM-TriageAgent.Tests.csproj
 
-    # 4. Compile the entire C# codebase in Release mode from the correct subfolder
+    # 4. Compile your test project (this will automatically compile your API reference too)
     - name: 🏗️ Compile Application Binaries
-      working-directory: ./LLM-TriageAgent.API
+      working-directory: ./LLM-TriageAgent.Tests
       run: dotnet build --no-restore --configuration Release
 
-    # 5. ✅ FIXED: Point the test runner directly at your .Tests project file folder!
+    # 5. ✅ FIXED: Execute the xUnit test runner directly inside your isolated Tests directory!
     - name: 🧪 Execute Automated Unit Test Suite
       working-directory: ./LLM-TriageAgent.Tests
       run: dotnet test --no-build --configuration Release --verbosity normal

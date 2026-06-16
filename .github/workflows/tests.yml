@@ -34,5 +34,5 @@ jobs:
 
     # 5. ✅ FIXED: Point the test runner directly at your .Tests project file folder!
     - name: 🧪 Execute Automated Unit Test Suite
-      working-directory: ./LLM-TriageAgent.API/LLM-TriageAgent.Tests
+      working-directory: ./LLM-TriageAgent.Tests
       run: dotnet test --no-build --configuration Release --verbosity normal

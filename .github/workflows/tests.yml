@@ -1,6 +1,6 @@
-name: Automated Unit Testing Matrix
+name: 🧪 Automated Unit Testing Matrix
 
-# TRIGGERS: Run this pipeline automatically on every push or pull request to the main branch
+# 🚀 TRIGGERS: Run this pipeline automatically on every push or pull request to the main branch
 on:
   push:
     branches: [ "main" ]
@@ -13,23 +13,26 @@ jobs:
 
     steps:
     # 1. Download your latest code onto the virtual Linux machine
-    - name: Checkout Repository Code
+    - name: 📂 Checkout Repository Code
       uses: actions/checkout@v4
 
     # 2. Install the exact modern .NET 10 SDK required to compile your system
-    - name: Setup .NET 10 Environment
+    - name: ⚙️ Setup .NET 10 Environment
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
 
-    # 3. Pull down all required NuGet packages (MassTransit, EF Core In-Memory, Moq)
-    - name: Restore Core NuGet Dependencies
+    # 3. Pull down all required NuGet packages from the correct subfolder directory
+    - name: 📥 Restore Core NuGet Dependencies
+      working-directory: ./LLM-TriageAgent.API
       run: dotnet restore
 
-    # 4. Compile the entire C# codebase in Release mode to check for any typos or bugs
-    - name: Compile Application Binaries
+    # 4. Compile the entire C# codebase in Release mode from the correct subfolder
+    - name: 🏗️ Compile Application Binaries
+      working-directory: ./LLM-TriageAgent.API
       run: dotnet build --no-restore --configuration Release
 
-    # 5. Run xUnit tests. If any test fails, the pipeline will flag red and block deployments.
-    - name: Execute Automated Unit Test Suite
+    # 5. Run your xUnit tests inside your dedicated testing module path
+    - name: 🧪 Execute Automated Unit Test Suite
+      working-directory: ./LLM-TriageAgent.API
       run: dotnet test --no-build --configuration Release --verbosity normal

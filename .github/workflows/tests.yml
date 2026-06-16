@@ -32,7 +32,7 @@ jobs:
       working-directory: ./LLM-TriageAgent.API
       run: dotnet build --no-restore --configuration Release
 
-    # 5. Run your xUnit tests inside your dedicated testing module path
+    # 5. ✅ FIXED: Point the test runner directly at your .Tests project file folder!
     - name: 🧪 Execute Automated Unit Test Suite
-      working-directory: ./LLM-TriageAgent.API
+      working-directory: ./LLM-TriageAgent.API/LLM-TriageAgent.Tests
       run: dotnet test --no-build --configuration Release --verbosity normal

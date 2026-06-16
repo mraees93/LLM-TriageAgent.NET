@@ -1,6 +1,6 @@
-name: 🧪 Automated Unit Testing Matrix
+name: Automated Unit Testing Matrix
 
-# 🚀 TRIGGERS: Run this pipeline automatically on every push or pull request to the main branch
+# TRIGGERS: Run this pipeline automatically on every push or pull request to the main branch
 on:
   push:
     branches: [ "main" ]
@@ -13,27 +13,27 @@ jobs:
 
     steps:
     # 1. Download your latest code onto the virtual Linux machine
-    - name: 📂 Checkout Repository Code
+    - name: Checkout Repository Code
       uses: actions/checkout@v4
 
     # 2. Install the exact modern .NET 10 SDK required to compile your system
-    - name: ⚙️ Setup .NET 10 Environment
+    - name: Setup .NET 10 Environment
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
 
     # 3. Pull down required NuGet packages explicitly for your API and Tests folders
-    - name: 📥 Restore Core NuGet Dependencies
+    - name: Restore Core NuGet Dependencies
       run: |
         dotnet restore LLM-TriageAgent.API/LLM-TriageAgent.API.csproj
         dotnet restore LLM-TriageAgent.Tests/LLM-TriageAgent.Tests.csproj
 
     # 4. Compile your test project (this will automatically compile your API reference too)
-    - name: 🏗️ Compile Application Binaries
+    - name: Compile Application Binaries
       working-directory: ./LLM-TriageAgent.Tests
       run: dotnet build --no-restore --configuration Release
 
-    # 5. ✅ FIXED: Execute the xUnit test runner directly inside your isolated Tests directory!
-    - name: 🧪 Execute Automated Unit Test Suite
+    # 5. FIXED: Execute the xUnit test runner directly inside your isolated Tests directory!
+    - name: Execute Automated Unit Test Suite
       working-directory: ./LLM-TriageAgent.Tests
       run: dotnet test --no-build --configuration Release --verbosity normal

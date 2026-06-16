@@ -1,5 +1,7 @@
 # LLM-TriageAgent: Resilient AI-driven Architecture 
 
+![🧪 Automated Unit Testing Matrix](https://github.com/mraees93/LLM-TriageAgent.NET/actions/workflows/tests.yml/badge.svg)
+
 LLM-TriageAgent is a full-stack, Decoupled Distributed Architecture, Docker-containerised DevOps support ticket triage service designed for asynchronous scale, cloud resilience, and intelligent automation. Built with a modern .NET 10 backend and a React + Tailwind frontend, it leverages a decoupled MVC architecture and an event-driven messaging topology to offload heavy AI model analysis and classification pipelines away from the user interface.
 
 ---

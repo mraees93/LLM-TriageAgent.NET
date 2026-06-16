@@ -1,4 +1,4 @@
-name: Automated Unit Testing Matrix
+name: Dotnet Xunit unit tests
 
 # TRIGGERS: Run this pipeline automatically on every push or pull request to the main branch
 on:

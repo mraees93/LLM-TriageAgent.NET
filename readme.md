@@ -2,7 +2,7 @@
 
 [![Dotnet Xunit unit tests](https://github.com/mraees93/LLM-TriageAgent.NET/actions/workflows/tests.yml/badge.svg)](https://github.com/mraees93/LLM-TriageAgent.NET/actions/workflows/tests.yml)
 
-LLM-TriageAgent is a full stack, Decoupled Distributed Architecture, Docker-containerised DevOps support ticket triage service designed for asynchronous scale, cloud resilience, and intelligent automation. Built with a modern .NET 10 backend and a React + Tailwind frontend, it leverages a decoupled MVC architecture and an event-driven messaging topology to offload heavy AI model analysis and classification pipelines away from the user interface.
+LLM-TriageAgent is a full-stack, Docker-containerised DevOps support ticket triage service designed for asynchronous scale, cloud resilience, and intelligent automation. Built with a modern .NET 10 backend and a React + Tailwind frontend, it leverages a decoupled MVC architecture and an event-driven messaging topology to offload heavy AI model analysis and classification pipelines away from the user interface.
 
 ---
 
@@ -20,9 +20,9 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
 
 5. **Temporal Database Constraint Layouts**: Configured explicit timezone column mapping schemas utilizing Entity Framework Fluent API attributes (`timestamp with time zone`). This creates strict, structural validation checks that automatically normalize telemetry timestamps between local flat SQLite database files and live cloud relational pools.
 
-6. **Service Idempotency Shields (Fault-Tolerant Duplicate Guard)**: Hardened against network packet retries and distributed message duplication bugs common in cloud routing infrastructures. Background consumer workers run an automatic telemetry state check upon picking up a message; if a ticket record is already flagged as `Processing` or `Resolved`, the worker exits safely to protect data lines and save CPU cycles.
+6. **Service Idempotency Shields (Fault-Tolerant Duplicate Guard)**: Hardened against network packet retries and distributed message duplication bugs common in cloud routing infrastructures. Background consumer workers run an automatic telemetry state check upon picking up a message; if a ticket ticket is already flagged as `Processing` or `Resolved`, the worker exits safely to protect data lines and save CPU cycles.
 
-7. **Automated Dead Letter Queue (DLQ) Fault Consumers**: Designed with self-healing message routing pipelines to handle downstream infrastructure outages (such as an offline local AI engine). If an event worker encounters a runtime crash, MassTransit catches the exception and routes the data envelope straight to a dedicated **Fault Consumer**, which automatically updates the record state to `Failed`, logs an infrastructure log statement, and keeps the primary message highway fluid and functional.
+7. **Automated Dead Letter Queue (DLQ) Fault Consumers**: Designed with self-healing message routing pipelines to handle downstream infrastructure outages (such as an offline local AI engine). If an event worker encounters a runtime crash, MassTransit catches the exception and routes the data envelope straight to a dedicated **Fault Consumer**, which automatically updates the ticket state to `Failed`, logs an infrastructure log statement, and keeps the primary message highway fluid and functional.
 
 8. **Isolated Database Schema Multi-Tenancy**: The application targets custom table naming suffixes (`_Final_v6`) generated via Entity Framework mapping handlers. This explicit naming boundary pattern isolates database tables, allowing multiple decoupled full-stack projects to safely co-exist within a single shared cloud PostgreSQL database instance without encountering namespace collisions or data corruption cross-talk.
 
@@ -34,7 +34,7 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
 * **Backend Framework**: ASP.NET Core 10 Web API + MassTransit (Dockerized), hosted on Render.
 * **Database Management**: Aiven PostgreSQL (Production) and SQLite (Local).
 * **Intelligence Core**: Local Ollama Engine executing the `phi3` model (Local) and an asynchronous telemetry cloud simulator (Production).
-* **CI/CD Integration**: Automated integration and deployment pipelines via GitHub.
+* **CI/CD Integration**: Automated integration and deployment pipelines via GitHub Actions.
 
 ---
 
@@ -43,19 +43,24 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
 1. **Permanent Operations Log**: A cloud-hosted PostgreSQL database ensures that your entire historical support metric deck survives server restarts and container recycles.
 2. **Server Cold-Start Notification**: Smart frontend tracking logic that displays an explicit, red warning notice to users when a free-tier server instance is waking up from inactivity.
 3. **Automated Labeling & Fix Generation**: Background AI consumer threads parse the semantic payload of incoming ticket descriptions to autonomously apply classification labels (`bug` vs. `investigate`) and generate targeted technical fix commentary.
-4. **Interactive Cloud Re-Triage**: Full CRUD capabilities allowing web users to edit ticket content using pre-filled inline modal inputs. Saving modifications preserves the original record ID while resetting status flags to re-trigger the background AI queue pipeline in real-time.
+4. **Interactive Cloud Re-Triage**: Full CRUD capabilities allowing web users to edit ticket content using pre-filled inline modal inputs. Saving modifications preserves the original ticket ID while resetting status flags to re-trigger the background AI queue pipeline in real-time.
+5. **Advanced Regex Error Code Triage Matrix**: Integrates a centralized utility text-parsing script using Regular Expressions to instantly intercept any standalone 3-digit numeric sequence. In production, this unlocks a 9-response dictionary matrix matching real-world infrastructure failures (such as **HTTP 429 Rate Limiting** or **HTTP 502 Bad Gateways**) with highly specific corporate resolution telemetry strings.
 
 ---
 
-## 🧪 Automated Quality Assurance & Testing
+## 🧪 Automated Quality Assurance & Unit Testing
 
 LLM-TriageAgent includes a separate, root-level test project built with **xUnit** and **Moq** to validate core background consumer logic, state machine patterns, and idempotency guards using an isolated, thread-safe In-Memory database tracker layer.
 
-### Core Coverage Matrices
-* **Idempotency Checks**: Verifies that backend consumer workers immediately intercept and drop redundant messages—safeguarding data channels if the React client sends a duplicate network packet by accident or if an internet protocol loops a transaction—preventing duplicate processing loops to preserve absolute database state integrity.
+**Note on Testing Strategy:** This test suite explicitly verifies the system infrastructure and core business rules. It purposefully utilizes mock ticket patterns for the cloud production path to shield the automated pipeline from the unpredictable, non-deterministic outputs generated by a live, local language model. This clean separation ensures a highly stable, fast, and repeatable continuous integration execution loop.
 
+### Core Coverage Matrices
+* **MassTransit Context Wrapper Verification**: Utilizes Moq to simulate asynchronous queue message arrivals, verifying that consumer blocks update transactional database tickets correctly in memory.
+* **Idempotency Checks**: Verifies that backend consumer workers immediately intercept and drop redundant messages—safeguarding data channels if the React client sends a duplicate network packet by accident or if an internet protocol loops a transaction—preventing duplicate processing loops to preserve absolute database state integrity.
 * **AI Rule Classification**: Validates pattern matching logic against high-risk error indicators (e.g., forcing a `bug` label string when descriptions contain a `"404"` error flag).
 * **Fault Consumer Resilience**: Assures the Dead Letter Queue worker properly isolates exception envelopes and saves quarantine logs during system crashes.
+* **Regex Validation Bounds**: Verifies that the text-parsing engine successfully extracts valid HTTP status fault codes (400–599) while accurately ignoring mismatched numbers (such as an out-of-bounds user account ID).
+* **Dictionary Mapping Verification**: Validates that mock status code injections securely route to their designated response data payloads.
 
 ### Running the Test Engine
 To clear build artifacts and execute the automated backend test suites from the root directory, open your terminal and run:
@@ -76,7 +81,7 @@ To verify the full functionality of the LLM-TriageAgent system live in your brow
 
 ### 2. Destruction & Cleanup Handshake
 * **Delete tickets**: Click the red **🗑️ Delete ticket** button on any resolved card. 
-* **Custom Modal Reuse**: A custom theme modal will pop up right over the screen requesting a secure confirmation. Clicking confirm executes the database delete command over the API and makes the card slide off the dashboard array list smoothly with zero browser alert popups.
+* **Custom Modal Reuse**: Your custom theme modal will pop up right over the screen requesting a secure confirmation. Clicking confirm executes the database delete command over the API and makes the card slide off the dashboard array list smoothly with zero browser alert popups.
 
 ### 3. How to Simulate a Live Cloud Infrastructure Outage
 To witness the system's asynchronous error-catching capability over the live internet:
@@ -86,6 +91,6 @@ To witness the system's asynchronous error-catching capability over the live int
   throw new Exception("CRITICAL ERROR: Cloud AI Model Gateway Timeout.");
   ```
 * Push the change to GitHub and let Render deploy it. 
-* Submit a fresh ticket on your live Vercel site. 
+* Submit a fresh ticket on the live Vercel site. 
 
-Because the background thread crashes instantly, MassTransit catches the exception, reroutes the message to your `TicketFaultConsumer`, and turns the card a flat red box. Simultaneously, your custom **Notification Modal will instantly pop up right over your screen** with a red cross icon to alert you that the system has successfully isolated and quarantined an infrastructure failure block!
+Because the background thread crashes instantly, MassTransit catches the exception, reroutes the message to my `TicketFaultConsumer`, and turns the card a failed red badge. Simultaneously, the custom **Notification Modal will instantly pop up right over your screen** with a red cross icon to alert you that the system has successfully isolated and quarantined an infrastructure failure block.

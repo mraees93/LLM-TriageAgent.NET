@@ -7,6 +7,7 @@ using MassTransit;
 using LLM_TriageAgent.API.Database;
 using LLM_TriageAgent.API.Models;
 using LLM_TriageAgent.API.Services;
+using LLM_TriageAgent.API.Utils;
 
 namespace LLM_TriageAgent.Tests;
 
@@ -17,7 +18,7 @@ public class ConsumerTests
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-            
+
         return new AppDbContext(options);
     }
 
@@ -26,7 +27,7 @@ public class ConsumerTests
     public async Task TicketFaultConsumer_Should_Quarantine_And_Fail_Ticket_When_Triggered()
     {
         using var dbContext = GetInMemoryDbContext();
-        
+
         var testTicket = new SupportTicket
         {
             Id = "test-fault-id-123",
@@ -34,13 +35,13 @@ public class ConsumerTests
             Description = "Persistent critical database loss timeouts",
             Status = "Processing"
         };
-        
+
         dbContext.SupportTickets.Add(testTicket);
         await dbContext.SaveChangesAsync();
 
         var mockFaultContext = new Mock<ConsumeContext<Fault<SupportTicket>>>();
         var mockFaultMessage = new Mock<Fault<SupportTicket>>();
-        
+
         mockFaultMessage.Setup(m => m.Message).Returns(testTicket);
         mockFaultContext.Setup(c => c.Message).Returns(mockFaultMessage.Object);
 
@@ -48,7 +49,7 @@ public class ConsumerTests
         await faultConsumer.Consume(mockFaultContext.Object);
 
         var updatedTicket = await dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == "test-fault-id-123");
-        
+
         Assert.NotNull(updatedTicket);
         Assert.Equal("Failed", updatedTicket.Status);
         Assert.Equal("SYSTEM_FAULT", updatedTicket.AssignedLabel);
@@ -62,7 +63,7 @@ public class ConsumerTests
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", "Host=fake_aiven_postgres_pool");
 
         using var dbContext = GetInMemoryDbContext();
-        
+
         var testTicket = new SupportTicket
         {
             Id = "ticket-404-id",
@@ -70,7 +71,7 @@ public class ConsumerTests
             Description = "Getting a nasty 404 error page on checkout screen links",
             Status = "Pending"
         };
-        
+
         dbContext.SupportTickets.Add(testTicket);
         await dbContext.SaveChangesAsync();
 
@@ -98,7 +99,7 @@ public class ConsumerTests
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", "Host=fake_aiven_postgres_pool");
 
         using var dbContext = GetInMemoryDbContext();
-        
+
         var testTicket = new SupportTicket
         {
             Id = "ticket-generic-id",
@@ -106,7 +107,7 @@ public class ConsumerTests
             Description = "Hardware temperature telemetry reports brief spike spikes during background tasks.",
             Status = "Pending"
         };
-        
+
         dbContext.SupportTickets.Add(testTicket);
         await dbContext.SaveChangesAsync();
 
@@ -133,7 +134,7 @@ public class ConsumerTests
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", "Host=fake_aiven_postgres_pool");
 
         using var dbContext = GetInMemoryDbContext();
-        
+
         var testTicket = new SupportTicket
         {
             Id = "idempotent-id-999",
@@ -143,7 +144,7 @@ public class ConsumerTests
             AssignedLabel = "manual_fix",
             AgentReply = "Original Human Intervention Completed."
         };
-        
+
         dbContext.SupportTickets.Add(testTicket);
         await dbContext.SaveChangesAsync();
 
@@ -163,4 +164,28 @@ public class ConsumerTests
 
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
     }
+
+    [Fact]
+    public void TriageUtilities_Should_Extract_Valid_HTTP_Codes_And_Ignore_Invalid_Numbers()
+    {
+        // Act: Test standard server fault codes
+        int? validCode = TriageUtilities.ExtractHttpErrorCode("Server Error", "Critical failure throwing an HTTP 502 code.");
+        int? outOfBoundsCode = TriageUtilities.ExtractHttpErrorCode("User Update", "Processed payload for user account ID 250 safely.");
+
+        Assert.NotNull(validCode);
+        Assert.Equal(502, validCode.Value);
+        Assert.Null(outOfBoundsCode);
+    }
+
+    [Fact]
+    public void TriageUtilities_Should_Map_Rate_Limiter_Payloads_Correctly()
+    {
+        // Act: Simulate an HTTP 429 text description string match
+        var (label, reply) = TriageUtilities.GetProductionMockResponse(429, "Throttling active.");
+
+        Assert.Equal("investigate", label);
+        Assert.Contains("Fixed Window rate limits", reply);
+        Assert.Contains("throttling client gateway", reply);
+    }
+
 }

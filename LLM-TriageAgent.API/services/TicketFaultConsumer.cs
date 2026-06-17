@@ -21,7 +21,7 @@ public class TicketFaultConsumer : IConsumer<Fault<SupportTicket>>
     {
         // Extract the original support ticket payload from inside the fault message
         var originalTicket = context.Message.Message;
-        Console.WriteLine($"⚠️ [Dead Letter Queue] Intercepted system crash loop for ticket #{originalTicket.Id}");
+        Console.WriteLine($"[Dead Letter Queue] Intercepted system crash loop for ticket #{originalTicket.Id}");
 
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == originalTicket.Id);
         if (dbTicket == null) return;

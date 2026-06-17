@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using LLM_TriageAgent.API.Database;
@@ -22,7 +23,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
     public async Task Consume(ConsumeContext<SupportTicket> context)
     {
         var queuedTicket = context.Message;
-        Console.WriteLine($"\n📥 [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
+        Console.WriteLine($"\n [Queue Consumer] Picked up Ticket #{queuedTicket.Id} from the message queue.");
 
         var dbTicket = await _dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == queuedTicket.Id);
         
@@ -43,26 +44,55 @@ public class TicketConsumer : IConsumer<SupportTicket>
             // CLOUD PRODUCTION MOCK AI ENGINE, simulates local Ollama response timing safely over the public web
             try
             {
-                Console.WriteLine("☁️ [Cloud AI Agent] Emulating background tool analysis loops...");
+                Console.WriteLine("[Cloud AI Agent] Emulating background tool analysis loops...");
                 
                 int dynamicDelayMs = new Random().Next(3500, 7500);
                 await Task.Delay(dynamicDelayMs); 
 
-                bool contains404 = dbTicket.Description.Contains("404") || dbTicket.Title.Contains("404");
+                //bool contains404 = dbTicket.Description.Contains("404") || dbTicket.Title.Contains("404");
+                bool hasHttpErrorCode = false;
+                var fullTicketText = $"{dbTicket.Title} {dbTicket.Description}";
 
-                dbTicket.AssignedLabel = contains404 ? "bug" : "investigate";
-                dbTicket.AgentReply = contains404
-                    ? "CLOUD AI RESOLUTION: Detected broken route endpoint configurations. Missing mapping parameter has been patched inside RouteConfig.cs."
-                    : "CLOUD AI RESOLUTION: General warning trace flags identified. Initiating standard systems architecture operational diagnostics audit.";
-                
-                dbTicket.Status = "Resolved";
-                dbTicket.ResolvedAt = DateTime.UtcNow; 
-                Console.WriteLine($"🎯 [Cloud AI Agent] Successfully resolved ticket #{dbTicket.Id}!");
+                // Matches any standalone 3-digit numeric string boundary patterns
+                var numericMatches = Regex.Matches(fullTicketText, @"\b\d{3}\b");
+
+                foreach (Match match in numericMatches)
+                {
+                if (int.TryParse(match.Value, out int codeValue))
+                    {
+                    if (codeValue >= 400 && codeValue <= 599)
+                    {
+                        hasHttpErrorCode = true;
+                        break;
+                    }
+                    }
+                }
+
+                bool isSoftwareBug = hasHttpErrorCode || 
+                             dbTicket.Description.ToLower().Contains("bug") || 
+                             dbTicket.Description.ToLower().Contains("crash");
+
+                if (isSoftwareBug)
+                {
+                    dbTicket.Status = "Resolved";
+                    dbTicket.AssignedLabel = "bug";
+                    dbTicket.AgentReply = "CLOUD AI RESOLUTION: Detected broken route endpoint configurations. Missing mapping parameter has been patched inside RouteConfig.cs.";
+                }
+                else
+                {
+                    dbTicket.Status = "Resolved";
+                    dbTicket.AssignedLabel = "investigate";
+                    dbTicket.AgentReply = "CLOUD AI RESOLUTION: General warning trace flags identified. Initiating standard systems architecture operational diagnostics audit.";
+                }
+
+                dbTicket.ResolvedAt = DateTime.UtcNow;
+                Console.WriteLine($"[Cloud AI Agent] Successfully resolved ticket #{dbTicket.Id}!");
+
             }
             catch (Exception ex)
             {
                 dbTicket.Status = "Failed";
-                Console.WriteLine($"❌ [Cloud AI Agent Error]: {ex.Message}");
+                Console.WriteLine($"[Cloud AI Agent Error]: {ex.Message}");
             }
         }
         else
@@ -88,7 +118,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
                 using var doc = JsonDocument.Parse(responseString);
                 string errorCode = doc.RootElement.GetProperty("response").GetString()?.Trim() ?? "404";
 
-                Console.WriteLine($"🔍 [AI Agent Tool Use] Searching backend logs for code identifier: '{errorCode}'...");
+                Console.WriteLine($"[AI Agent Tool Use] Searching backend logs for code identifier: '{errorCode}'...");
                 string mockLogs = errorCode.Contains("404") 
                     ? "DATABASE LOG: Thread 4: Error 404 on endpoint '/api/auth/login'. Reason: Route missing from RouteConfig.cs file mapping."
                     : "DATABASE LOG: General warning. No explicit route failure mappings located.";
@@ -112,7 +142,7 @@ public class TicketConsumer : IConsumer<SupportTicket>
                 dbTicket.Status = "Resolved";
                 dbTicket.ResolvedAt = DateTime.UtcNow;
 
-                Console.WriteLine($"🎯 [Local AI Agent Action] Successfully resolved ticket #{dbTicket.Id}!");
+                Console.WriteLine($"[Local AI Agent Action] Successfully resolved ticket #{dbTicket.Id}!");
             }
             catch (Exception ex)
             {

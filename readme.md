@@ -1,4 +1,4 @@
-# LLM-TriageAgent: Resilient AI-driven Architecture 
+# LLM-TriageAgent: Resilient event-driven Architecture 
 
 [![Dotnet Xunit unit tests](https://github.com/mraees93/LLM-TriageAgent.NET/actions/workflows/tests.yml/badge.svg)](https://github.com/mraees93/LLM-TriageAgent.NET/actions/workflows/tests.yml)
 

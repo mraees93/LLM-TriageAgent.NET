@@ -55,7 +55,7 @@ export default function App() {
             <h1 className="text-3xl font-extrabold text-indigo-400 flex items-center gap-2">
               LLM-TriageAgent
             </h1>
-            <p className="text-slate-400 mt-1">Resilient AI-driven Architecture</p>
+            <p className="text-slate-400 mt-1">Resilient event-driven Architecture</p>
           </div>
         </header>
 

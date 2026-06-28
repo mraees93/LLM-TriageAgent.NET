@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using MassTransit;
 using LLM_TriageAgent.API.Database;
 using LLM_TriageAgent.API.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,19 +17,30 @@ public class TicketsController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IMemoryCache _memoryCache;
+    private const string CacheKey = "AllTickets_Cache_Key";
 
-    public TicketsController(AppDbContext context, IPublishEndpoint publishEndpoint)
+    public TicketsController(AppDbContext context, IPublishEndpoint publishEndpoint, IMemoryCache memoryCache)
     {
         _context = context;
         _publishEndpoint = publishEndpoint;
+        _memoryCache = memoryCache;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllTickets()
     {
-        var tickets = await _context.SupportTickets
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync();
+        if (!_memoryCache.TryGetValue(CacheKey, out List<SupportTicket>? tickets))
+        {
+            tickets = await _context.SupportTickets
+                .OrderByDescending(t => t.CreatedAt)
+                .ToListAsync();
+
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+
+            _memoryCache.Set(CacheKey, tickets, cacheOptions);
+        }
             
         return Ok(tickets);
     }
@@ -46,6 +59,8 @@ public class TicketsController : ControllerBase
         _context.SupportTickets.Add(ticket);
         await _context.SaveChangesAsync();
 
+        _memoryCache.Remove(CacheKey);
+
         await _publishEndpoint.Publish(ticket);
 
         return Ok(ticket);
@@ -62,6 +77,8 @@ public class TicketsController : ControllerBase
 
         _context.SupportTickets.Remove(ticket);
         await _context.SaveChangesAsync();
+
+        _memoryCache.Remove(CacheKey);
         
         return Ok();
     }
@@ -85,6 +102,8 @@ public class TicketsController : ControllerBase
         ticket.ResolvedAt = null;
 
         await _context.SaveChangesAsync();
+
+        _memoryCache.Remove(CacheKey);
 
         // Push back onto MassTransit event bus to awake the background worker
         await _publishEndpoint.Publish(ticket);

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Xunit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using MassTransit;
 using LLM_TriageAgent.API.Database;
@@ -20,6 +21,20 @@ public class ConsumerTests
             .Options;
 
         return new AppDbContext(options);
+    }
+
+    // Helper layout method providing a clean baseline mock parameter for IMemoryCache
+    private IMemoryCache GetMockMemoryCache()
+    {
+        var mockMemoryCache = new Mock<IMemoryCache>();
+        var mockCacheEntry = new Mock<ICacheEntry>();
+        
+        // Configures TryGetValue out parameters to default to false (cache-miss routine simulation)
+        object? cachedValue = null;
+        mockMemoryCache.Setup(m => m.TryGetValue(It.IsAny<object>(), out cachedValue)).Returns(false);
+        mockMemoryCache.Setup(m => m.CreateEntry(It.IsAny<object>())).Returns(mockCacheEntry.Object);
+        
+        return mockMemoryCache.Object;
     }
 
     // TEST 1: EXISTING FAULT CONSUMER TEST
@@ -104,7 +119,7 @@ public class ConsumerTests
         {
             Id = "ticket-generic-id",
             Title = "General CPU Warning",
-            Description = "Hardware temperature telemetry reports brief spike spikes during background tasks.",
+            Description = "Hardware temperature telemetry reports brief brief spike spikes during background tasks.",
             Status = "Pending"
         };
 
@@ -188,4 +203,20 @@ public class ConsumerTests
         Assert.Contains("throttling client gateway", reply);
     }
 
+    // TEST 7: IN-MEMORY CACHE-ASIDE ALLOCATION VALIDATION
+    [Fact]
+    public async Task GetAllTickets_Should_Populate_Cache_On_First_Load()
+    {
+        using var dbContext = GetInMemoryDbContext();
+        var mockPublishEndpoint = new Mock<IPublishEndpoint>();
+        
+        var mockMemoryCache = new Mock<IMemoryCache>();
+        var mockCacheEntry = new Mock<ICacheEntry>();
+        mockMemoryCache.Setup(m => m.CreateEntry(It.IsAny<object>())).Returns(mockCacheEntry.Object);
+
+        var controller = new API.Controllers.TicketsController(dbContext, mockPublishEndpoint.Object, mockMemoryCache.Object);
+        var result = await controller.GetAllTickets();
+
+        mockMemoryCache.Verify(m => m.CreateEntry(It.IsAny<object>()), Times.Once);
+    }
 }

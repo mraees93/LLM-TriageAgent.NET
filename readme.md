@@ -26,6 +26,20 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
 
 8. **Isolated Database Schema Multi-Tenancy**: The application targets custom table naming suffixes (`_Final_v6`) generated via Entity Framework mapping handlers. This explicit naming boundary pattern isolates database tables, allowing multiple decoupled full-stack projects to safely co-exist within a single shared cloud PostgreSQL database instance without encountering namespace collisions or data corruption cross-talk.
 
+9. **High-Performance Caching Tier: Cache-Aside (Read-Aside) Pattern with Proactive Invalidation**: To optimize core compute cycles and achieve sub-millisecond read latencies under heavy client traffic, the application layer incorporates an advanced memory caching architecture designed around the **Cache-Aside Pattern** using .NET’s native `IMemoryCache` engines. When the frontend dashboard triggers polling loops to monitor ticket statuses, the request is intercepted at the controller layer. On a cache hit, data is served directly out of fast volatile RAM, eliminating intensive database disk scans. On a cache miss, the system reads from 
+
+                  [ React Dashboard ]
+                    /            \
+       1. GET /api/tickets      2. POST/PUT/DELETE
+                  /                \
+        [ TicketsController ]     [ TicketsController ]
+          /               \                 |
+    (Cache Hit)      (Cache Miss)    3. Evict Entry
+        /                   \               |
+ [ Memory Cache ]     [ PostgreSQL ]  [ Memory Cache ]
+ (Sub-millisecond)    (Database Disk)    (Wiped RAM)
+
+
 ---
 
 ## 💻 Tech Stack

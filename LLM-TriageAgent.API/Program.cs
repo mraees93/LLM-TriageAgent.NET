@@ -71,6 +71,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+builder.Services.AddMemoryCache();
+
 // MIDDLEWARE STACK EXECUTION SEQUENCE
 app.UseForwardedHeaders();
 app.UseCors();

@@ -37,7 +37,7 @@ public class TicketsController : ControllerBase
                 .ToListAsync();
 
             var cacheOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromSeconds(5));
+                .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
 
             _memoryCache.Set(CacheKey, tickets, cacheOptions);
         }

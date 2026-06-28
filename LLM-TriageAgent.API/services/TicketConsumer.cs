@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using MassTransit;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
 using LLM_TriageAgent.API.Database;
 using LLM_TriageAgent.API.Models;
@@ -13,10 +14,13 @@ namespace LLM_TriageAgent.API.Services;
 public class TicketConsumer : IConsumer<SupportTicket>
 {
     private readonly AppDbContext _dbContext;
+    private readonly IMemoryCache _memoryCache; 
+    private const string CacheKey = "AllTickets_Cache_Key"; 
 
-    public TicketConsumer(AppDbContext dbContext)
+    public TicketConsumer(AppDbContext dbContext, IMemoryCache memoryCache)
     {
         _dbContext = dbContext;
+        _memoryCache = memoryCache;
     }
 
     public async Task Consume(ConsumeContext<SupportTicket> context)
@@ -96,6 +100,8 @@ public class TicketConsumer : IConsumer<SupportTicket>
                 throw;
             }
         }
+
+        _memoryCache.Remove(CacheKey);
     }
 
     private class OllamaResponse { public string Response { get; set; } = ""; }

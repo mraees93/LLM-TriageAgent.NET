@@ -93,7 +93,8 @@ public class ConsumerTests
         var mockConsumeContext = new Mock<ConsumeContext<SupportTicket>>();
         mockConsumeContext.Setup(c => c.Message).Returns(testTicket);
 
-        var consumer = new TicketConsumer(dbContext);
+        // Passed memory mock parameter safely to satisfy constructor
+        var consumer = new TicketConsumer(dbContext, GetMockMemoryCache());
         await consumer.Consume(mockConsumeContext.Object);
 
         var updatedTicket = await dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == "ticket-404-id");
@@ -129,7 +130,8 @@ public class ConsumerTests
         var mockConsumeContext = new Mock<ConsumeContext<SupportTicket>>();
         mockConsumeContext.Setup(c => c.Message).Returns(testTicket);
 
-        var consumer = new TicketConsumer(dbContext);
+        // Passed memory mock parameter safely to satisfy constructor
+        var consumer = new TicketConsumer(dbContext, GetMockMemoryCache());
         await consumer.Consume(mockConsumeContext.Object);
 
         var updatedTicket = await dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == "ticket-generic-id");
@@ -166,7 +168,8 @@ public class ConsumerTests
         var mockConsumeContext = new Mock<ConsumeContext<SupportTicket>>();
         mockConsumeContext.Setup(c => c.Message).Returns(testTicket);
 
-        var consumer = new TicketConsumer(dbContext);
+        // Passed memory mock parameter safely to satisfy constructor
+        var consumer = new TicketConsumer(dbContext, GetMockMemoryCache());
         await consumer.Consume(mockConsumeContext.Object);
 
         var currentTicket = await dbContext.SupportTickets.FirstOrDefaultAsync(t => t.Id == "idempotent-id-999");

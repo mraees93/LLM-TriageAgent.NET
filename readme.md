@@ -20,7 +20,7 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
 
 5. **Temporal Database Constraint Layouts**: Configured explicit timezone column mapping schemas utilizing Entity Framework Fluent API attributes (`timestamp with time zone`). This creates strict, structural validation checks that automatically normalize telemetry timestamps between local flat SQLite database files and live cloud relational pools.
 
-6. **Service Idempotency Shields (Fault-Tolerant Duplicate Guard)**: Hardened against network packet retries and distributed message duplication bugs common in cloud routing infrastructures. Background consumer workers run an automatic telemetry state check upon picking up a message; if a ticket ticket is already flagged as `Processing` or `Resolved`, the worker exits safely to protect data lines and save CPU cycles.
+6. **Service Idempotency Shields (Fault-Tolerant Duplicate Guard)**: Hardened against network packet retries and distributed message duplication bugs common in cloud routing infrastructures. Background consumer workers run an automatic telemetry state check upon picking up a message; if a ticket is already flagged as `Processing` or `Resolved`, the worker exits safely to protect data lines and save CPU cycles.
 
 7. **Automated Dead Letter Queue (DLQ) Fault Consumers**: Designed with self-healing message routing pipelines to handle downstream infrastructure outages (such as an offline local AI engine). If an event worker encounters a runtime crash, MassTransit catches the exception and routes the data envelope straight to a dedicated **Fault Consumer**, which automatically updates the ticket state to `Failed`, logs an infrastructure log statement, and keeps the primary message highway fluid and functional.
 

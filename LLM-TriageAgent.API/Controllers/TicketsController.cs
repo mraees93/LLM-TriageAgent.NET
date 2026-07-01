@@ -72,7 +72,7 @@ public class TicketsController : ControllerBase
         var ticket = await _context.SupportTickets.FirstOrDefaultAsync(t => t.Id == id);
         if (ticket == null)
         {
-            return NotFound(new { message = "Link not found or already deleted" });
+            return NotFound(new { message = "Ticket not found or already deleted" });
         }
 
         _context.SupportTickets.Remove(ticket);
@@ -89,7 +89,7 @@ public class TicketsController : ControllerBase
         var ticket = await _context.SupportTickets.FirstOrDefaultAsync(t => t.Id == id);
         if (ticket == null)
         {
-            return NotFound(new { message = "Target record not found or already deleted." });
+            return NotFound(new { message = "Ticket not found or already deleted." });
         }
 
         ticket.Title = dto.Title;

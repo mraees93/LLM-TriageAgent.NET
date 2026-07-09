@@ -19,6 +19,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<SupportTicket>(entity =>
         {
             entity.ToTable("SupportTickets_Final_v6");
+
+            // Adds a descending B-Tree index to optimize chronologically sorted read queries
+            entity.HasIndex(t => t.CreatedAt)
+                  .HasDatabaseName("IX_SupportTickets_CreatedAt_Descending")
+                  .IsDescending();
         });
     }
 }

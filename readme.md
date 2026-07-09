@@ -39,6 +39,8 @@ LLM-TriageAgent was engineered following modern distributed systems patterns to 
  [ Memory Cache ]     [ PostgreSQL ]  [ Memory Cache ]
  (Sub-millisecond)    (Database Disk)    (Wiped RAM)
 
+10. **Database Read-Through Optimization: Descending Non-Clustered B-Tree Indexing**: To guarantee sub-millisecond execution times for dashboard query polling loops as the datastore scales, the persistence layer utilizes a targeted **Descending Non-Clustered B-Tree Index** configured via the Entity Framework Core Fluent API on the `CreatedAt` column.
+
 
 ---
 
